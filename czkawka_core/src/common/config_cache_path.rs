@@ -48,7 +48,7 @@ pub fn set_config_cache_path(cache_name: &'static str, config_name: &'static str
                     default_folder_str
                 ));
                 return default_folder;
-            };
+            }
             if !folder_path.is_dir() {
                 warnings.push(format!(
                     "{name} folder \"{}\" is not a directory, using default folder \"{}\"",
@@ -144,7 +144,7 @@ pub(crate) fn open_cache_folder(
                 return None;
             }
         }
-    };
+    }
     Some(((file_handler_default, cache_file), (file_handler_json, cache_file_json)))
 }
 

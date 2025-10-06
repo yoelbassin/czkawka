@@ -154,7 +154,7 @@ impl ProgressData {
         // scanning it. So it is better to just log it
         if self.bytes_checked > self.bytes_to_check {
             error!("Bytes checked: {}, bytes to check: {}, stage {:?}", self.bytes_checked, self.bytes_to_check, self.sstage);
-        };
+        }
 
         let tool_type_checking_method: Option<ToolType> = match self.checking_method {
             CheckingMethod::AudioTags | CheckingMethod::AudioContent => Some(ToolType::SameMusic),
@@ -216,7 +216,7 @@ impl CurrentStage {
     }
 
     pub fn get_current_stage(&self) -> u8 {
-        #[allow(clippy::match_same_arms)] // Now it is easier to read
+        #[expect(clippy::match_same_arms)] // Now it is easier to read
         match self {
             Self::DeletingFiles => 0,
             Self::RenamingFiles => 0,

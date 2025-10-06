@@ -267,7 +267,7 @@ impl BrokenFiles {
     }
 }
 
-#[allow(clippy::string_slice)] // Valid, because we address go to dot, which is known ascii character
+#[expect(clippy::string_slice)] // Valid, because we address go to dot, which is known ascii character
 fn check_extension_availability(
     full_name: &Path,
     images_extensions: &HashSet<&&'static str>,

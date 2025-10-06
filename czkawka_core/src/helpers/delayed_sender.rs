@@ -51,7 +51,7 @@ impl<T: Send + 'static> DelayedSender<T> {
                 }
                 if let Err(e) = sender.send(value) {
                     log::error!("Failed to send value: {e:?}");
-                };
+                }
                 last_send_time = Some(Instant::now());
             }
         });

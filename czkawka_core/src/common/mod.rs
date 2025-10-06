@@ -148,7 +148,8 @@ pub(crate) fn create_crash_message(library_name: &str, file_path: &str, home_lib
     )
 }
 
-#[allow(clippy::string_slice)]
+#[expect(clippy::string_slice)]
+#[expect(clippy::indexing_slicing)]
 pub fn regex_check(expression_item: &SingleExcludedItem, directory_name: &str) -> bool {
     if expression_item.expression_splits.is_empty() {
         return true;
@@ -192,7 +193,7 @@ pub fn regex_check(expression_item: &SingleExcludedItem, directory_name: &str) -
     true
 }
 
-#[allow(clippy::string_slice)] // Is in char boundary
+#[expect(clippy::string_slice)] // Is in char boundary
 pub fn normalize_windows_path(path_to_change: impl AsRef<Path>) -> PathBuf {
     let path = path_to_change.as_ref();
 
@@ -299,13 +300,13 @@ mod test {
         fs::create_dir(&sub_dir).expect("Cannot create directory");
 
         // Test with empty directory
-        assert!(remove_folder_if_contains_only_empty_folders(&sub_dir, false).is_ok());
+        remove_folder_if_contains_only_empty_folders(&sub_dir, false).unwrap();
         assert!(!Path::new(&sub_dir).exists());
 
         // Test with directory containing an empty directory
         fs::create_dir(&sub_dir).expect("Cannot create directory");
         fs::create_dir(sub_dir.join("empty_sub_dir")).expect("Cannot create directory");
-        assert!(remove_folder_if_contains_only_empty_folders(&sub_dir, false).is_ok());
+        remove_folder_if_contains_only_empty_folders(&sub_dir, false).unwrap();
         assert!(!Path::new(&sub_dir).exists());
 
         // Test with directory containing a file
