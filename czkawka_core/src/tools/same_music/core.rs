@@ -411,7 +411,6 @@ impl SameMusic {
                     // When there is 0 files in base files or files to compare there will be no comparison, so removing it from the list
                     // Also when there is only one file in base files and files to compare and they are the same file, there will be no comparison
 
-
                     #[expect(clippy::indexing_slicing)] // Validated that base_files/files_to_compare are not empty
                     if base_files.is_empty()
                         || files_to_compare.is_empty()

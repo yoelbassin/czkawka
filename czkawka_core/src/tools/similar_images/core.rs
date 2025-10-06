@@ -468,7 +468,7 @@ impl SimilarImages {
             return WorkContinueStatus::Stop;
         }
 
-        self.verify_duplicated_items(&collected_similar_images);
+        Self::verify_duplicated_items(&collected_similar_images);
 
         // Info about hashes is not needed anymore, so we drop this info
         self.similar_vectors = collected_similar_images.into_values().collect();
@@ -536,7 +536,7 @@ impl SimilarImages {
     }
 
     // TODO this probably not works good when reference folders are used
-    pub(crate) fn verify_duplicated_items(&self, collected_similar_images: &HashMap<ImHash, Vec<ImagesEntry>>) {
+    pub(crate) fn verify_duplicated_items(collected_similar_images: &HashMap<ImHash, Vec<ImagesEntry>>) {
         if !cfg!(debug_assertions) {
             return;
         }

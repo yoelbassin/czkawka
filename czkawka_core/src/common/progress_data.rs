@@ -194,8 +194,8 @@ impl ProgressData {
 }
 
 impl ToolType {
-    pub(crate) fn get_max_stage(&self, checking_method: CheckingMethod) -> u8 {
-        match *self {
+    pub(crate) fn get_max_stage(self, checking_method: CheckingMethod) -> u8 {
+        match self {
             Self::Duplicate => 6,
             Self::EmptyFolders | Self::EmptyFiles | Self::InvalidSymlinks | Self::BigFile | Self::TemporaryFiles => 0,
             Self::BrokenFiles | Self::BadExtensions | Self::SimilarVideos => 1,
