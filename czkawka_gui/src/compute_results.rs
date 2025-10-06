@@ -1344,14 +1344,8 @@ fn similar_images_add_to_list_store(
     const COLUMNS_NUMBER: usize = 13;
     let size_str;
     let string_date;
-    let similarity_string;
     let color = if is_header { HEADER_ROW_COLOR } else { MAIN_ROW_COLOR };
-
-    if is_header {
-        similarity_string = String::new();
-    } else {
-        similarity_string = get_string_from_similarity(&similarity, hash_size);
-    }
+    let similarity_string = if is_header { String::new() } else { get_string_from_similarity(&similarity, hash_size) };
 
     if is_header && !is_reference_folder {
         size_str = String::new();
