@@ -172,12 +172,11 @@ mod opener {
         if selection.selected_rows.len() == 1 {
             let id = selection.selected_rows[0];
             open_item(app, items_path_str, id);
-        } else
-            if selection.selected_rows.is_empty() {
-                debug!("Failed to open selected item, because there is no selected item");
-            } else {
-                debug!("Failed to open selected item, because there is more than one selected item");
-            }
+        } else if selection.selected_rows.is_empty() {
+            debug!("Failed to open selected item, because there is no selected item");
+        } else {
+            debug!("Failed to open selected item, because there is more than one selected item");
+        }
     }
 
     pub(crate) fn open_selected_item(app: &MainWindow) {

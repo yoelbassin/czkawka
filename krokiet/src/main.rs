@@ -1,7 +1,5 @@
 // Remove console window in Windows OS
 #![windows_subsystem = "windows"]
-
-
 #![allow(clippy::unwrap_used)] // Cannot use due unwrap used in a lot of places in generated code
 #![allow(clippy::indexing_slicing)] // Cannot use due unwrap used in a lot of places in generated code
 #![allow(clippy::todo)] // Cannot use due unwrap used in a lot of places in generated code
@@ -14,7 +12,7 @@ use crossbeam_channel::{Receiver, Sender, unbounded};
 use czkawka_core::common::config_cache_path::{print_infos_and_warnings, set_config_cache_path};
 use czkawka_core::common::logger::{filtering_messages, print_version_mode, setup_logger};
 use czkawka_core::common::progress_data::ProgressData;
-use log::{info, warn};
+use log::info;
 use slint::VecModel;
 
 use crate::cli::process_cli_args;

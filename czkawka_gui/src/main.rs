@@ -1,6 +1,5 @@
 // Remove console window in Windows OS
 #![windows_subsystem = "windows"]
-
 #![allow(clippy::indexing_slicing)] // Too much used, to be able to ignore it in every place
 
 use std::env;

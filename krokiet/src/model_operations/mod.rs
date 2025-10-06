@@ -1,7 +1,6 @@
 pub mod model_processor;
 
-use slint::ComponentHandle;
-use slint::{Model, ModelRc};
+use slint::{ComponentHandle, Model, ModelRc};
 
 use crate::connect_row_selection::checker::get_number_of_enabled_items;
 use crate::simpler_model::SimplerMainListModel;
@@ -139,7 +138,6 @@ fn get_checked_group_info_from_model(model: &ModelRc<MainListModel>) -> CheckedI
         } else {
             current_group_all_checked = false;
         }
-
     }
     if model_collected.len() > 1 {
         if current_group_all_checked {
