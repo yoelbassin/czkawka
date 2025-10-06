@@ -85,12 +85,10 @@ impl Extensions {
             } else {
                 self.allowed_extensions_hashset.contains(&extension.to_lowercase())
             }
+        } else if extension.chars().all(|c| c.is_ascii_lowercase()) {
+            !self.excluded_extensions_hashset.contains(extension)
         } else {
-            if extension.chars().all(|c| c.is_ascii_lowercase()) {
-                !self.excluded_extensions_hashset.contains(extension)
-            } else {
-                !self.excluded_extensions_hashset.contains(&extension.to_lowercase())
-            }
+            !self.excluded_extensions_hashset.contains(&extension.to_lowercase())
         }
     }
 

@@ -1,3 +1,5 @@
+use bitflags::bitflags;
+
 pub mod core;
 pub mod traits;
 
