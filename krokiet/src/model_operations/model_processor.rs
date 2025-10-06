@@ -94,7 +94,7 @@ impl ModelProcessor {
 
         (new_model, errors, items_deleted)
     }
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     pub(crate) fn process_items(
         &self,
         items_simplified: Vec<(usize, SimplerMainListModel)>,
@@ -138,7 +138,6 @@ impl ModelProcessor {
         output
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub(crate) fn process_and_update_gui_state(
         self,
         weak_app: &Weak<MainWindow>,

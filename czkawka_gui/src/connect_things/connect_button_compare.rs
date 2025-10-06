@@ -399,20 +399,18 @@ fn generate_cache_for_results(vector_with_path: Vec<(String, String, TreePath)>,
 
         if use_rust_loader {
             match get_dynamic_image_from_path(&full_path) {
-                Ok(t) => {
-                    match get_pixbuf_from_dynamic_image(&t) {
-                        Ok(t) => {
-                            pixbuf = t;
-                        }
-                        Err(e) => {
-                            error!("Failed to open image {full_path}, reason {e}");
-                        }
-                    };
-                }
+                Ok(t) => match get_pixbuf_from_dynamic_image(&t) {
+                    Ok(t) => {
+                        pixbuf = t;
+                    }
+                    Err(e) => {
+                        error!("Failed to open image {full_path}, reason {e}");
+                    }
+                },
                 Err(e) => {
                     error!("Failed to open image {full_path}, reason {e}");
                 }
-            };
+            }
         } else {
             match Pixbuf::from_file(&full_path) {
                 Ok(t) => {
@@ -421,10 +419,10 @@ fn generate_cache_for_results(vector_with_path: Vec<(String, String, TreePath)>,
                 Err(e) => {
                     error!("Failed to open image {full_path}, reason {e}");
                 }
-            };
+            }
         }
 
-        #[allow(clippy::never_loop)]
+        #[expect(clippy::never_loop)]
         loop {
             let Some(pixbuf_big) = resize_pixbuf_dimension(&pixbuf, (BIG_PREVIEW_SIZE, BIG_PREVIEW_SIZE), InterpType::Bilinear) else {
                 error!("Failed to resize image {full_path}.");
@@ -502,10 +500,8 @@ fn move_iter(model: &TreeModel, tree_path: &TreePath, column_header: i32, go_nex
             if !model.iter_next(&tree_iter) {
                 break;
             }
-        } else {
-            if !model.iter_previous(&tree_iter) {
-                break;
-            }
+        } else if !model.iter_previous(&tree_iter) {
+            break;
         }
 
         if model.get::<bool>(&tree_iter, column_header) {

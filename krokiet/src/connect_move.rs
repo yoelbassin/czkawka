@@ -132,7 +132,7 @@ fn collect_path_and_create_folders(input_path: &str, input_file: &str, output_pa
     let mut output_full_path = PathBuf::from(output_path);
     if preserve_structure {
         output_full_path.extend(Path::new(input_path).components().filter(|c| matches!(c, path::Component::Normal(_))));
-    };
+    }
     let _ = fs::create_dir_all(&output_full_path);
     output_full_path.push(input_file);
 

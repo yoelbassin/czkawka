@@ -32,7 +32,7 @@ use crate::gui_structs::gui_progress_dialog::GuiProgressDialog;
 use crate::gui_structs::gui_settings::GuiSettings;
 use crate::gui_structs::gui_upper_notebook::GuiUpperNotebook;
 use crate::help_functions::{BottomButtonsEnum, SharedState};
-use crate::notebook_enums::*;
+use crate::notebook_enums::{NotebookMainEnum, get_all_main_tabs};
 use crate::taskbar_progress::TaskbarProgress;
 
 pub const ICON_ABOUT: &[u8] = include_bytes!("../../icons/icon_about.png");

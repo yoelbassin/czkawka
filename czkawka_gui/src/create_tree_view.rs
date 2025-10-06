@@ -1,7 +1,10 @@
 use gtk4::prelude::*;
 use gtk4::{CellRendererText, CellRendererToggle, ListStore, TreeView, TreeViewColumn};
 
-use crate::help_functions::*;
+use crate::help_functions::{
+    ColumnsBadExtensions, ColumnsBigFiles, ColumnsBrokenFiles, ColumnsDuplicates, ColumnsEmptyFiles, ColumnsEmptyFolders, ColumnsExcludedDirectory, ColumnsIncludedDirectory,
+    ColumnsInvalidSymlinks, ColumnsSameMusic, ColumnsSimilarImages, ColumnsSimilarVideos, ColumnsTemporaryFiles, get_list_store,
+};
 
 // When adding new column do not forget to update translations
 
@@ -230,7 +233,7 @@ fn create_default_selection_button_column(
     (renderer, column)
 }
 
-#[allow(clippy::option_option)]
+#[expect(clippy::option_option)]
 fn create_default_column(tree_view: &TreeView, column_id: i32, sort_column_id: Option<Option<i32>>, colors_columns_id: Option<(i32, i32)>) -> (CellRendererText, TreeViewColumn) {
     let renderer = CellRendererText::new();
     let column: TreeViewColumn = TreeViewColumn::new();

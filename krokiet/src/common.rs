@@ -267,8 +267,7 @@ impl ActiveTab {
             Self::BrokenFiles => IntDataBrokenFiles::SizePart1 as usize,
             Self::BadExtensions => IntDataBadExtensions::SizePart1 as usize,
             Self::TemporaryFiles => IntDataTemporaryFiles::SizePart1 as usize,
-            Self::Settings | Self::About => return None,
-            Self::EmptyFolders | Self::InvalidSymlinks => return None,
+            Self::Settings | Self::About | Self::EmptyFolders | Self::InvalidSymlinks => return None,
         };
         Some(res)
     }

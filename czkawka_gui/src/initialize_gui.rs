@@ -10,17 +10,27 @@ use gtk4::gdk_pixbuf::InterpType;
 use gtk4::prelude::*;
 use gtk4::{CheckButton, Image, ScrolledWindow, SelectionMode, TextView, TreeModel, TreePath, TreeSelection, TreeView};
 
-use crate::create_tree_view::*;
-use crate::gui_structs::gui_data::*;
+use crate::create_tree_view::{
+    create_tree_view_bad_extensions, create_tree_view_big_files, create_tree_view_broken_files, create_tree_view_duplicates, create_tree_view_empty_files,
+    create_tree_view_empty_folders, create_tree_view_excluded_directories, create_tree_view_included_directories, create_tree_view_invalid_symlinks, create_tree_view_same_music,
+    create_tree_view_similar_images, create_tree_view_similar_videos, create_tree_view_temporary_files,
+};
+use crate::gui_structs::gui_data::GuiData;
 use crate::help_combo_box::{
     DUPLICATES_CHECK_METHOD_COMBO_BOX, DUPLICATES_HASH_TYPE_COMBO_BOX, IMAGES_HASH_SIZE_COMBO_BOX, IMAGES_HASH_TYPE_COMBO_BOX, IMAGES_RESIZE_ALGORITHM_COMBO_BOX,
 };
-use crate::help_functions::*;
+use crate::help_functions::{
+    KEY_DELETE, add_text_to_text_view, get_full_name_from_path_name, get_list_store, get_pixbuf_from_dynamic_image, get_tree_view_name_from_notebook_enum,
+    get_tree_view_name_from_notebook_upper_enum, resize_pixbuf_dimension, scale_set_min_max_values,
+};
 use crate::language_functions::LANGUAGES_ALL;
 use crate::localizer_core::generate_translation_hashmap;
 use crate::notebook_enums::{NotebookMainEnum, NotebookUpperEnum};
 use crate::notebook_info::NOTEBOOKS_INFO;
-use crate::opening_selecting_records::*;
+use crate::opening_selecting_records::{
+    opening_double_click_function, opening_double_click_function_directories, opening_enter_function_ported, opening_enter_function_ported_upper_directories,
+    opening_middle_mouse_function, select_function_duplicates, select_function_same_music, select_function_similar_images, select_function_similar_videos,
+};
 use crate::{delete_things, flg};
 
 pub(crate) fn initialize_gui(gui_data: &GuiData) {
@@ -492,7 +502,7 @@ fn show_preview(
     if selected_rows.len() == 1 && check_button_settings_show_preview.is_active() {
         let tree_path = selected_rows[0].clone();
         // TODO labels on {} are in testing stage, so we just ignore for now this warning until found better idea how to fix this
-        #[allow(clippy::never_loop)]
+        #[expect(clippy::never_loop)]
         'dir: loop {
             let path = tree_model.get::<String>(&tree_model.iter(&tree_path).expect("Invalid tree_path"), column_path);
             let name = tree_model.get::<String>(&tree_model.iter(&tree_path).expect("Invalid tree_path"), column_name);

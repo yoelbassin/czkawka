@@ -7,8 +7,8 @@ use log::debug;
 
 use crate::flg;
 use crate::gui_structs::gui_data::GuiData;
-use crate::help_functions::*;
-use crate::notebook_enums::*;
+use crate::help_functions::{add_text_to_text_view, check_how_much_elements_is_selected, clean_invalid_headers, get_full_name_from_path_name, get_list_store, reset_text_view};
+use crate::notebook_enums::NotebookMainEnum;
 use crate::notebook_info::NOTEBOOKS_INFO;
 
 pub(crate) fn connect_button_move(gui_data: &GuiData) {
@@ -201,13 +201,11 @@ fn move_files_common(
                 messages += "\n";
                 continue 'next_result;
             }
-        } else {
-            if let Err(e) = fs_extra::file::move_file(&thing, &destination_file, &fs_extra::file::CopyOptions::new()) {
-                messages += flg!("move_file_failed", name = thing, reason = e.to_string()).as_str();
-                messages += "\n";
+        } else if let Err(e) = fs_extra::file::move_file(&thing, &destination_file, &fs_extra::file::CopyOptions::new()) {
+            messages += flg!("move_file_failed", name = thing, reason = e.to_string()).as_str();
+            messages += "\n";
 
-                continue 'next_result;
-            }
+            continue 'next_result;
         }
         model.remove(&iter);
         moved_files += 1;

@@ -122,7 +122,7 @@ pub struct GuiMainNotebook {
     pub check_button_music_length: CheckButton,
     pub check_button_music_approximate_comparison: CheckButton,
     pub check_button_music_compare_only_in_title_group: CheckButton,
-    #[allow(unused)]
+    #[expect(unused)]
     pub label_audio_check_type: Label,
     pub combo_box_audio_check_type: ComboBoxText,
     pub label_same_music_seconds: Label,

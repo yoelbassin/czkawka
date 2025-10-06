@@ -3,7 +3,10 @@ use gtk4::GestureClick;
 use gtk4::prelude::*;
 use log::{debug, error};
 
-use crate::help_functions::*;
+use crate::help_functions::{
+    ColumnsDuplicates, ColumnsExcludedDirectory, ColumnsIncludedDirectory, ColumnsSameMusic, ColumnsSimilarImages, ColumnsSimilarVideos, KEY_ENTER, KEY_SPACE,
+    get_full_name_from_path_name, get_list_store, get_notebook_object_from_tree_view, get_notebook_upper_enum_from_tree_view,
+};
 use crate::notebook_enums::NotebookUpperEnum;
 
 // TODO add option to open files and folders from context menu activated by pressing ONCE with right mouse button
@@ -157,7 +160,7 @@ fn common_open_function(tree_view: &gtk4::TreeView, column_name: i32, column_pat
 
         if let Err(e) = open::that(&end_path) {
             error!("Failed to open file {end_path}, reason {e}");
-        };
+        }
     }
 }
 
@@ -215,7 +218,7 @@ fn common_open_function_upper_directories(tree_view: &gtk4::TreeView, column_ful
 
         if let Err(e) = open::that(&full_path) {
             error!("Failed to open file {full_path}, reason {e}");
-        };
+        }
     }
 }
 

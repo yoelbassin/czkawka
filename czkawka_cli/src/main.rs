@@ -1,9 +1,3 @@
-#![allow(clippy::needless_late_init)]
-#![warn(clippy::unwrap_used)]
-#![warn(clippy::print_stderr)]
-#![warn(clippy::print_stdout)]
-#![warn(clippy::dbg_macro)]
-
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
@@ -49,7 +43,6 @@ pub struct CliOutput {
     pub output: String,
 }
 
-#[allow(clippy::print_stdout)]
 fn main() {
     if cfg!(debug_assertions) {
         use clap::CommandFactory;

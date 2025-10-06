@@ -361,7 +361,7 @@ pub(crate) fn get_dialog_box_child(dialog: &gtk4::Dialog) -> gtk4::Box {
 }
 
 pub(crate) fn change_dimension_to_krotka(dimensions: &str) -> (u64, u64) {
-    #[allow(clippy::single_char_pattern)]
+    #[expect(clippy::single_char_pattern)]
     let vec = dimensions.split::<&str>("x").collect::<Vec<_>>();
     assert_eq!(vec.len(), 2); // 400x400 - should only have two elements, if have more, then something is not good
     let number1 = vec[0].parse::<u64>().expect("Invalid data in image dimension in position 0");
@@ -572,15 +572,13 @@ pub(crate) fn check_how_much_elements_is_selected(tree_view: &TreeView, column_h
 
                 if model.get::<bool>(&iter, column_header) {
                     is_item_currently_selected_in_group = false;
-                } else {
-                    if model.get::<bool>(&iter, column_selection) {
-                        number_of_selected_items += 1;
+                } else if model.get::<bool>(&iter, column_selection) {
+                    number_of_selected_items += 1;
 
-                        if !is_item_currently_selected_in_group {
-                            number_of_selected_groups += 1;
-                        }
-                        is_item_currently_selected_in_group = true;
+                    if !is_item_currently_selected_in_group {
+                        number_of_selected_groups += 1;
                     }
+                    is_item_currently_selected_in_group = true;
                 }
             }
         } else {
@@ -692,7 +690,7 @@ pub(crate) fn get_custom_image_from_widget<P: IsA<Widget>>(item: &P) -> gtk4::Im
     panic!("Button doesn't have proper custom label child");
 }
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 pub(crate) fn debug_print_widget<P: IsA<Widget>>(item: &P) {
     let mut widgets_to_check = vec![(0, 0, item.clone().upcast::<Widget>())];
 
