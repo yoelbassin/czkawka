@@ -5,11 +5,54 @@ use czkawka_core::tools::similar_images::SIMILAR_VALUES;
 use czkawka_core::tools::similar_images::core::get_string_from_similarity;
 use gtk4::prelude::*;
 use gtk4::{Builder, CheckButton, ComboBoxText, Entry, EventControllerKey, GestureClick, Label, Notebook, Picture, Scale, ScrolledWindow, TreeView, Widget};
+use std::collections::HashMap;
 
 use crate::flg;
 use crate::help_combo_box::{AUDIO_TYPE_CHECK_METHOD_COMBO_BOX, BIG_FILES_CHECK_METHOD_COMBO_BOX, DUPLICATES_CHECK_METHOD_COMBO_BOX, IMAGES_HASH_SIZE_COMBO_BOX};
 use crate::help_functions::get_all_direct_children;
 use crate::notebook_enums::{NUMBER_OF_NOTEBOOK_MAIN_TABS, NotebookMainEnum};
+use crate::notebook_info::{NOTEBOOKS_INFO, NotebookObject};
+
+pub struct CommonTreeViews {
+    pub subviews: Vec<SubView>,
+    pub notebook_main: Notebook,
+}
+impl CommonTreeViews {
+    pub fn get_current(&self) -> SubView {
+        let nb_number = self.notebook_main.current_page().expect("Current page not set");
+        self.subviews.get(&NOTEBOOKS_INFO[nb_number as usize].notebook_type).expect("Cannot find current notebook tab").clone()
+    }
+}
+
+
+#[derive(Clone)]
+struct SubView {
+    pub scrolled_window: ScrolledWindow,
+    pub tree_view: TreeView,
+    pub gesture_click: GestureClick,
+    pub event_controller_key: EventControllerKey,
+    pub notebook_object: NotebookObject,
+}
+
+impl SubView {
+    pub fn new(builder: &Builder, scrolled_name: &str, enum_value: NotebookMainEnum) -> Self {
+        let tree_view: TreeView = TreeView::new();
+        let event_controller_key: EventControllerKey = EventControllerKey::new();
+        tree_view.add_controller(event_controller_key.clone());
+        let gesture_click: GestureClick = GestureClick::new();
+        tree_view.add_controller(gesture_click.clone());
+
+        let notebook_object = NOTEBOOKS_INFO[enum_value as usize].clone();
+
+        Self {
+            scrolled_window: builder.object(scrolled_name).expect(format!("Cannot find scrolled window {}", scrolled_name).as_str()),
+            tree_view,
+            gesture_click,
+            event_controller_key,
+            notebook_object,
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct GuiMainNotebook {
@@ -129,6 +172,7 @@ pub struct GuiMainNotebook {
     pub label_same_music_similarity: Label,
     pub scale_seconds_same_music: Scale,
     pub scale_similarity_same_music: Scale,
+
 }
 
 impl GuiMainNotebook {
@@ -263,6 +307,28 @@ impl GuiMainNotebook {
         let scale_seconds_same_music: Scale = builder.object("scale_seconds_same_music").expect("Cambalache");
         let scale_similarity_same_music: Scale = builder.object("scale_similarity_same_music").expect("Cambalache");
 
+        let subviews = [
+            SubView::new(builder, "scrolled_window_duplicate_finder", NotebookMainEnum::Duplicate),
+            SubView::new(builder, "scrolled_window_empty_folder_finder", NotebookMainEnum::EmptyDirectories),
+            SubView::new(builder, "scrolled_window_empty_files_finder", NotebookMainEnum::EmptyFiles),
+            SubView::new(builder, "scrolled_window_temporary_files_finder", NotebookMainEnum::Temporary),
+            SubView::new(builder, "scrolled_window_big_files_finder", NotebookMainEnum::BigFiles),
+            SubView::new(builder, "scrolled_window_similar_images_finder", NotebookMainEnum::SimilarImages),
+            SubView::new(builder, "scrolled_window_similar_videos_finder", NotebookMainEnum::SimilarVideos),
+            SubView::new(builder, "scrolled_window_same_music_finder", NotebookMainEnum::SameMusic),
+            SubView::new(builder, "scrolled_window_invalid_symlinks", NotebookMainEnum::Symlinks),
+            SubView::new(builder, "scrolled_window_broken_files", NotebookMainEnum::BrokenFiles),
+            SubView::new(builder, "scrolled_window_bad_extensions", NotebookMainEnum::BadExtensions),
+        ]
+        .into_iter()
+        .map(|sv| sv)
+        .collect();
+
+        let common_tree_views = CommonTreeViews {
+            notebook_main: notebook_main.clone(),
+            subviews: subviews.clone(),
+        };
+
         Self {
             notebook_main,
             scrolled_window_duplicate_finder,
@@ -354,12 +420,14 @@ impl GuiMainNotebook {
             label_same_music_similarity,
             scale_seconds_same_music,
             scale_similarity_same_music,
+            common_tree_views,
         }
     }
 
     pub(crate) fn get_main_tree_views(&self) -> [TreeView; NUMBER_OF_NOTEBOOK_MAIN_TABS] {
         [
             self.tree_view_duplicate_finder.clone(),
+            // TreeView::new(),
             self.tree_view_empty_folder_finder.clone(),
             self.tree_view_big_files_finder.clone(),
             self.tree_view_empty_files_finder.clone(),
