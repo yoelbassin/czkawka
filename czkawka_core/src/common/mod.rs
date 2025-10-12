@@ -18,30 +18,34 @@ use std::ffi::OsString;
 use std::io::Error;
 use std::path::{Path, PathBuf};
 use std::{fs, io, thread};
-
+use std::sync::Mutex;
 use items::SingleExcludedItem;
 use log::debug;
-
+use once_cell::sync::Lazy;
 use crate::common::consts::{DEFAULT_WORKER_THREAD_SIZE, TEMP_HARDLINK_FILE};
 
-static NUMBER_OF_THREADS: state::InitCell<usize> = state::InitCell::new();
-static ALL_AVAILABLE_THREADS: state::InitCell<usize> = state::InitCell::new();
+static NUMBER_OF_THREADS: Lazy<Mutex<Option<usize>>> = Lazy::new(|| Mutex::new(None));
+static ALL_AVAILABLE_THREADS: Lazy<Mutex<Option<usize>>> = Lazy::new(|| Mutex::new(None));
 
 pub fn get_number_of_threads() -> usize {
-    let data = NUMBER_OF_THREADS.get();
-    if *data >= 1 { *data } else { get_all_available_threads() }
+    let data = NUMBER_OF_THREADS.lock().expect("Cannot fail").expect("Should be set before get");
+    if data >= 1 { data } else { get_all_available_threads() }
 }
 
 pub fn get_all_available_threads() -> usize {
-    *ALL_AVAILABLE_THREADS.get_or_init(|| {
-        let available_threads = thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
-        ALL_AVAILABLE_THREADS.set(available_threads);
+    let mut available_threads = ALL_AVAILABLE_THREADS.lock().expect("Cannot fail");
+
+    if let Some(available_threads) = *available_threads {
         available_threads
-    })
+    } else {
+        let threads = thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
+        *available_threads = Some(threads);
+        threads
+    }
 }
 
 pub fn set_number_of_threads(thread_number: usize) {
-    NUMBER_OF_THREADS.set(thread_number);
+    *NUMBER_OF_THREADS.lock().expect("Cannot fail") = Some(thread_number);
 
     let additional_message = if thread_number == 0 {
         format!(

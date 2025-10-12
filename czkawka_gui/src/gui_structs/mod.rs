@@ -9,3 +9,4 @@ pub mod gui_popovers_sort;
 mod gui_progress_dialog;
 pub mod gui_settings;
 pub mod gui_upper_notebook;
+pub mod common_tree_view;

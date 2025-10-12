@@ -11,9 +11,7 @@ use gtk4::prelude::*;
 use gtk4::{CheckButton, Picture, ScrolledWindow, SelectionMode, TextView, TreeModel, TreePath, TreeSelection, TreeView};
 
 use crate::create_tree_view::{
-    create_tree_view_bad_extensions, create_tree_view_big_files, create_tree_view_broken_files, create_tree_view_duplicates, create_tree_view_empty_files,
-    create_tree_view_empty_folders, create_tree_view_excluded_directories, create_tree_view_included_directories, create_tree_view_invalid_symlinks, create_tree_view_same_music,
-    create_tree_view_similar_images, create_tree_view_similar_videos, create_tree_view_temporary_files,
+    create_tree_view_excluded_directories, create_tree_view_included_directories,
 };
 use crate::gui_structs::gui_data::GuiData;
 use crate::help_combo_box::{
