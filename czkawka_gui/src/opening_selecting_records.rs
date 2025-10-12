@@ -304,16 +304,22 @@ pub(crate) fn select_function_similar_videos(
     )
 }
 
-pub(crate) fn select_function_header(header_id: i32) -> fn(&TreeSelection, &TreeModel, &TreePath, bool) -> bool {
-    move | _tree_selection: &gtk4::TreeSelection,
+pub(crate) fn select_function_header(header_id: i32) -> Box<dyn Fn(&TreeSelection, &TreeModel, &TreePath, bool) -> bool> {
+    Box::new(move | _tree_selection: &gtk4::TreeSelection,
          tree_model: &gtk4::TreeModel,
          tree_path: &gtk4::TreePath,
          _is_path_currently_selected: bool
     | !tree_model.get::<bool>(&tree_model.iter(tree_path).expect("Invalid tree_path"), header_id)
+    )
 }
 
-pub(crate) fn select_function_always_true_no_args() -> fn(&TreeSelection, &TreeModel, &TreePath, bool) -> bool {
-    select_function_always_true
+pub(crate) fn select_function_always_true_no_args() -> Box<dyn Fn(&TreeSelection, &TreeModel, &TreePath, bool) -> bool> {
+    Box::new(|_tree_selection: &gtk4::TreeSelection,
+              _tree_model: &gtk4::TreeModel,
+              _tree_path: &gtk4::TreePath,
+              _is_path_currently_selected: bool| {
+        true
+    })
 }
 
 pub(crate) fn select_function_always_true(

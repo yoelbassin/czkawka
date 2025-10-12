@@ -64,7 +64,6 @@ pub struct SubView {
     pub notebook_object: NotebookObject,
     pub enum_value: NotebookMainEnum,
     pub image_preview: Option<gtk4::Picture>,
-    pub start_select_function: Option<fn(&TreeSelection, &TreeModel, &TreePath, bool) -> bool>,
     pub tree_view_name: String,
 }
 
@@ -112,12 +111,6 @@ impl SubView {
 
         let notebook_object = NOTEBOOKS_INFO[enum_value as usize].clone();
 
-        let start_select_function = if let Some(column_header) = notebook_object.column_header {
-            Some(select_function_header(column_header))
-        } else {
-            None
-        };
-
         Self {
             scrolled_window: builder.object(scrolled_name).expect(format!("Cannot find scrolled window {}", scrolled_name).as_str()),
             tree_view,
@@ -126,7 +119,6 @@ impl SubView {
             notebook_object,
             enum_value,
             image_preview,
-            start_select_function,
             tree_view_name: tree_view_name.to_string(),
         }
     }
@@ -138,9 +130,10 @@ impl SubView {
 
         self.tree_view.set_model(Some(&ListStore::new(self.notebook_object.columns_types)));
         self.tree_view.selection().set_mode(SelectionMode::Multiple);
-        if let Some(start_select_function) = self.start_select_function {
-            self.tree_view.selection().set_select_function(start_select_function);
-        }
+
+        let start_select_function = if let Some(column_header) = self.notebook_object.column_header {
+            self.tree_view.selection().set_select_function(select_function_header(column_header));
+        };
 
         self.tree_view.set_vexpand(true);
 
