@@ -6,7 +6,11 @@ use crate::notebook_enums::NotebookMainEnum;
 use crate::notebook_info::{NOTEBOOKS_INFO, NotebookObject};
 use glib::translate::ToGlibPtr;
 use gtk4::prelude::*;
-use gtk4::{Builder, CellRendererText, CellRendererToggle, EventControllerKey, GestureClick, ListStore, Notebook, ScrolledWindow, TreeView, TreeViewColumn};
+use gtk4::{
+    Builder, CellRendererText, CellRendererToggle, EventControllerKey, GestureClick, ListStore, Notebook, ScrolledWindow, SelectionMode, TreeModel, TreePath, TreeSelection,
+    TreeView, TreeViewColumn,
+};
+use crate::opening_selecting_records::{select_function_always_true, select_function_header};
 
 #[derive(Clone)]
 pub struct CommonTreeViews {
@@ -59,20 +63,60 @@ pub struct SubView {
     pub event_controller_key: EventControllerKey,
     pub notebook_object: NotebookObject,
     pub enum_value: NotebookMainEnum,
-    pub preview: Option<gtk4::Picture>
+    pub image_preview: Option<gtk4::Picture>,
+    pub start_select_function: Option<fn(&TreeSelection, &TreeModel, &TreePath, bool) -> bool>,
+    pub tree_view_name: String,
 }
 
+// fn create_column_types(
+//     scrolled_window: &ScrolledWindow,
+//     tree_view: &TreeView,
+//     notebook_enum: NotebookMainEnum,
+//     select_function: Option<fn(&TreeSelection, &TreeModel, &TreePath, bool) -> bool>,
+//     create_tree_view_func: fn(&TreeView),
+//     image_preview: Option<&Picture>,
+// ) {
+//     if let Some(image_preview) = image_preview {
+//         image_preview.hide();
+//     }
+//     let list_store: gtk4::ListStore = gtk4::ListStore::new(NOTEBOOKS_INFO[notebook_enum as usize].columns_types);
+//
+//     tree_view.set_model(Some(&list_store));
+//     tree_view.selection().set_mode(SelectionMode::Multiple);
+//     if let Some(select_function) = select_function {
+//         tree_view.selection().set_select_function(select_function);
+//     }
+//
+//     create_tree_view_func(tree_view);
+//
+//     tree_view.set_widget_name(get_tree_view_name_from_notebook_enum(notebook_enum));
+//     scrolled_window.set_child(Some(tree_view));
+//     scrolled_window.show();
+// }
+
 impl SubView {
-    pub fn new(builder: &Builder, scrolled_name: &str, enum_value: NotebookMainEnum, preview: Option<&str>) -> Self {
+    pub fn new(
+        builder: &Builder,
+        scrolled_name: &str,
+        enum_value: NotebookMainEnum,
+        preview_str: Option<&str>,
+        tree_view_name: &str,
+    ) -> Self {
         let tree_view: TreeView = TreeView::new();
         let event_controller_key: EventControllerKey = EventControllerKey::new();
         tree_view.add_controller(event_controller_key.clone());
         let gesture_click: GestureClick = GestureClick::new();
         tree_view.add_controller(gesture_click.clone());
 
-        let preview = preview.map(|name| builder.object(name).expect(format!("Cannot find preview image {}", name).as_str()));
+        let image_preview = preview_str.map(|name| builder.object(name).expect(format!("Cannot find preview image {}", name).as_str()));
 
         let notebook_object = NOTEBOOKS_INFO[enum_value as usize].clone();
+
+        let start_select_function = if let Some(column_header) = notebook_object.column_header {
+            Some(select_function_header(column_header))
+        } else {
+            None
+        };
 
         Self {
             scrolled_window: builder.object(scrolled_name).expect(format!("Cannot find scrolled window {}", scrolled_name).as_str()),
@@ -81,14 +125,34 @@ impl SubView {
             event_controller_key,
             notebook_object,
             enum_value,
-            preview
+            image_preview,
+            start_select_function,
+            tree_view_name: tree_view_name.to_string(),
         }
     }
 
     fn setup(&self) {
+        if let Some(image_preview) = &self.image_preview {
+            image_preview.hide();
+        }
+
+        self.tree_view.set_model(Some(&ListStore::new(self.notebook_object.columns_types)));
+        self.tree_view.selection().set_mode(SelectionMode::Multiple);
+        if let Some(start_select_function) = self.start_select_function {
+            self.tree_view.selection().set_select_function(start_select_function);
+        }
+
+        self.tree_view.set_vexpand(true);
+
+        self._setup_tree_view_config();
+
+        self.tree_view.set_widget_name(&self.tree_view_name);
+        self.scrolled_window.set_child(Some(&self.tree_view));
+        self.scrolled_window.show();
+    }
+    fn _setup_tree_view_config(&self) {
         let tree_view = &self.tree_view;
-        let model = self.tree_view.get_model();
-        tree_view.set_vexpand(true);
+        let model = tree_view.get_model();
         match self.enum_value {
             NotebookMainEnum::Duplicate => {
                 let columns_colors = (ColumnsDuplicates::Color as i32, ColumnsDuplicates::TextColor as i32);
@@ -149,7 +213,10 @@ impl SubView {
                     &[
                         (ColumnsTemporaryFiles::Name as i32, ColumnSort::Default),
                         (ColumnsTemporaryFiles::Path as i32, ColumnSort::Default),
-                        (ColumnsTemporaryFiles::Modification as i32, ColumnSort::Custom(ColumnsTemporaryFiles::ModificationAsSecs as i32)),
+                        (
+                            ColumnsTemporaryFiles::Modification as i32,
+                            ColumnSort::Custom(ColumnsTemporaryFiles::ModificationAsSecs as i32),
+                        ),
                     ],
                     None,
                 );
@@ -216,7 +283,10 @@ impl SubView {
                         (ColumnsInvalidSymlinks::Path as i32, ColumnSort::Default),
                         (ColumnsInvalidSymlinks::DestinationPath as i32, ColumnSort::Default),
                         (ColumnsInvalidSymlinks::TypeOfError as i32, ColumnSort::Default),
-                        (ColumnsInvalidSymlinks::Modification as i32, ColumnSort::Custom(ColumnsInvalidSymlinks::ModificationAsSecs as i32)),
+                        (
+                            ColumnsInvalidSymlinks::Modification as i32,
+                            ColumnSort::Custom(ColumnsInvalidSymlinks::ModificationAsSecs as i32),
+                        ),
                     ],
                     None,
                 );
@@ -258,7 +328,6 @@ pub enum ColumnSort {
     Custom(i32),
 }
 
-
 pub(crate) fn create_default_selection_button_column(
     tree_view: &TreeView,
     column_id: i32,
@@ -285,13 +354,7 @@ pub(crate) fn create_default_selection_button_column(
     (renderer, column)
 }
 
-
-
-pub(crate) fn create_default_columns(
-    tree_view: &TreeView,
-    columns: &[(i32, ColumnSort)],
-    colors_columns_id: Option<(i32, i32)>,
-) {
+pub(crate) fn create_default_columns(tree_view: &TreeView, columns: &[(i32, ColumnSort)], colors_columns_id: Option<(i32, i32)>) {
     for (col_id, sort_method) in columns {
         let renderer = CellRendererText::new();
         let column: TreeViewColumn = TreeViewColumn::new();
@@ -300,7 +363,7 @@ pub(crate) fn create_default_columns(
         column.set_min_width(50);
         column.add_attribute(&renderer, "text", *col_id);
         match sort_method {
-            ColumnSort::None => {},
+            ColumnSort::None => {}
             ColumnSort::Default => column.set_sort_column_id(*col_id),
             ColumnSort::Custom(val) => column.set_sort_column_id(*val),
         }

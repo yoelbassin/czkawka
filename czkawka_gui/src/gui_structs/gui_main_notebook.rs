@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use crate::flg;
 use crate::gui_structs::common_tree_view::{CommonTreeViews, SubView};
 use crate::help_combo_box::{AUDIO_TYPE_CHECK_METHOD_COMBO_BOX, BIG_FILES_CHECK_METHOD_COMBO_BOX, DUPLICATES_CHECK_METHOD_COMBO_BOX, IMAGES_HASH_SIZE_COMBO_BOX};
-use crate::help_functions::get_all_direct_children;
+use crate::help_functions::{get_all_direct_children, ColumnsDuplicates};
 use crate::notebook_enums::{NUMBER_OF_NOTEBOOK_MAIN_TABS, NotebookMainEnum};
 use crate::notebook_info::{NOTEBOOKS_INFO, NotebookObject};
 
@@ -271,18 +271,19 @@ impl GuiMainNotebook {
         let scale_seconds_same_music: Scale = builder.object("scale_seconds_same_music").expect("Cambalache");
         let scale_similarity_same_music: Scale = builder.object("scale_similarity_same_music").expect("Cambalache");
 
+        #[rustfmt::skip]
         let subviews: Vec<_> = [
-            SubView::new(builder, "scrolled_window_duplicate_finder", NotebookMainEnum::Duplicate),
-            SubView::new(builder, "scrolled_window_empty_folder_finder", NotebookMainEnum::EmptyDirectories),
-            SubView::new(builder, "scrolled_window_empty_files_finder", NotebookMainEnum::EmptyFiles),
-            SubView::new(builder, "scrolled_window_temporary_files_finder", NotebookMainEnum::Temporary),
-            SubView::new(builder, "scrolled_window_big_files_finder", NotebookMainEnum::BigFiles),
-            SubView::new(builder, "scrolled_window_similar_images_finder", NotebookMainEnum::SimilarImages),
-            SubView::new(builder, "scrolled_window_similar_videos_finder", NotebookMainEnum::SimilarVideos),
-            SubView::new(builder, "scrolled_window_same_music_finder", NotebookMainEnum::SameMusic),
-            SubView::new(builder, "scrolled_window_invalid_symlinks", NotebookMainEnum::Symlinks),
-            SubView::new(builder, "scrolled_window_broken_files", NotebookMainEnum::BrokenFiles),
-            SubView::new(builder, "scrolled_window_bad_extensions", NotebookMainEnum::BadExtensions),
+            SubView::new(builder, "scrolled_window_duplicate_finder", NotebookMainEnum::Duplicate, Some("image_preview_duplicates"), "tree_view_duplicate_finder"),
+            SubView::new(builder, "scrolled_window_empty_folder_finder", NotebookMainEnum::EmptyDirectories, None, "tree_view_empty_folder_finder"),
+            SubView::new(builder, "scrolled_window_empty_files_finder", NotebookMainEnum::EmptyFiles, None, "tree_view_empty_files_finder"),
+            SubView::new(builder, "scrolled_window_temporary_files_finder", NotebookMainEnum::Temporary, None, "tree_view_temporary_files_finder"),
+            SubView::new(builder, "scrolled_window_big_files_finder", NotebookMainEnum::BigFiles, None, "tree_view_big_files_finder"),
+            SubView::new(builder, "scrolled_window_similar_images_finder", NotebookMainEnum::SimilarImages, Some("image_preview_similar_images"), "tree_view_similar_images_finder"),
+            SubView::new(builder, "scrolled_window_similar_videos_finder", NotebookMainEnum::SimilarVideos, None, "tree_view_similar_videos_finder"),
+            SubView::new(builder, "scrolled_window_same_music_finder", NotebookMainEnum::SameMusic, None, "tree_view_same_music_finder"),
+            SubView::new(builder, "scrolled_window_invalid_symlinks", NotebookMainEnum::Symlinks, None, "tree_view_invalid_symlinks"),
+            SubView::new(builder, "scrolled_window_broken_files", NotebookMainEnum::BrokenFiles, None, "tree_view_broken_files"),
+            SubView::new(builder, "scrolled_window_bad_extensions", NotebookMainEnum::BadExtensions, None, "tree_view_bad_extensions")
         ]
         .into_iter()
         .map(|sv| sv)

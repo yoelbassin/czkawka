@@ -1,4 +1,6 @@
+use gtk4::Notebook;
 use czkawka_core::TOOLS_NUMBER;
+use crate::help_functions::{ColumnsDuplicates, ColumnsSameMusic, ColumnsSimilarImages, ColumnsSimilarVideos};
 
 pub const NUMBER_OF_NOTEBOOK_MAIN_TABS: usize = TOOLS_NUMBER;
 // pub const NUMBER_OF_NOTEBOOK_UPPER_TABS: usize = 3;
@@ -17,6 +19,18 @@ pub enum NotebookMainEnum {
     Symlinks,
     BrokenFiles,
     BadExtensions,
+}
+
+impl NotebookMainEnum {
+    pub fn get_is_header_idx(&self) -> Option<u32> {
+        match self {
+            NotebookMainEnum::Duplicate => Some(ColumnsDuplicates::IsHeader as u32),
+            NotebookMainEnum::SameMusic => Some(ColumnsSameMusic::IsHeader as u32),
+            NotebookMainEnum::SimilarImages => Some(ColumnsSimilarImages::IsHeader as u32),
+            NotebookMainEnum::SimilarVideos => Some(ColumnsSimilarVideos::IsHeader as u32),
+            _ => None,
+        }
+    }
 }
 
 pub(crate) fn to_notebook_main_enum(notebook_number: u32) -> NotebookMainEnum {

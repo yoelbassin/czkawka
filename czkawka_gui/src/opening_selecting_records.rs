@@ -1,5 +1,5 @@
 use gdk4::{Key, ModifierType};
-use gtk4::GestureClick;
+use gtk4::{GestureClick, TreeModel, TreePath, TreeSelection};
 use gtk4::prelude::*;
 use log::{debug, error};
 
@@ -254,7 +254,12 @@ pub(crate) fn select_function_duplicates(
     tree_path: &gtk4::TreePath,
     _is_path_currently_selected: bool,
 ) -> bool {
-    !tree_model.get::<bool>(&tree_model.iter(tree_path).expect("Invalid tree_path"), ColumnsDuplicates::IsHeader as i32)
+    select_function_header(ColumnsDuplicates::IsHeader as i32)(
+        _tree_selection,
+        tree_model,
+        tree_path,
+        _is_path_currently_selected,
+    )
 }
 
 pub(crate) fn select_function_same_music(
@@ -263,7 +268,12 @@ pub(crate) fn select_function_same_music(
     tree_path: &gtk4::TreePath,
     _is_path_currently_selected: bool,
 ) -> bool {
-    !tree_model.get::<bool>(&tree_model.iter(tree_path).expect("Invalid tree_path"), ColumnsSameMusic::IsHeader as i32)
+    select_function_header(ColumnsSameMusic::IsHeader as i32)(
+        _tree_selection,
+        tree_model,
+        tree_path,
+        _is_path_currently_selected,
+    )
 }
 
 pub(crate) fn select_function_similar_images(
@@ -272,7 +282,12 @@ pub(crate) fn select_function_similar_images(
     tree_path: &gtk4::TreePath,
     _is_path_currently_selected: bool,
 ) -> bool {
-    !tree_model.get::<bool>(&tree_model.iter(tree_path).expect("Invalid tree_path"), ColumnsSimilarImages::IsHeader as i32)
+    select_function_header(ColumnsSimilarImages::IsHeader as i32)(
+        _tree_selection,
+        tree_model,
+        tree_path,
+        _is_path_currently_selected,
+    )
 }
 
 pub(crate) fn select_function_similar_videos(
@@ -281,7 +296,24 @@ pub(crate) fn select_function_similar_videos(
     tree_path: &gtk4::TreePath,
     _is_path_currently_selected: bool,
 ) -> bool {
-    !tree_model.get::<bool>(&tree_model.iter(tree_path).expect("Invalid tree_path"), ColumnsSimilarVideos::IsHeader as i32)
+    select_function_header(ColumnsSimilarVideos::IsHeader as i32)(
+        _tree_selection,
+        tree_model,
+        tree_path,
+        _is_path_currently_selected,
+    )
+}
+
+pub(crate) fn select_function_header(header_id: i32) -> fn(&TreeSelection, &TreeModel, &TreePath, bool) -> bool {
+    move | _tree_selection: &gtk4::TreeSelection,
+         tree_model: &gtk4::TreeModel,
+         tree_path: &gtk4::TreePath,
+         _is_path_currently_selected: bool
+    | !tree_model.get::<bool>(&tree_model.iter(tree_path).expect("Invalid tree_path"), header_id)
+}
+
+pub(crate) fn select_function_always_true_no_args() -> fn(&TreeSelection, &TreeModel, &TreePath, bool) -> bool {
+    select_function_always_true
 }
 
 pub(crate) fn select_function_always_true(
