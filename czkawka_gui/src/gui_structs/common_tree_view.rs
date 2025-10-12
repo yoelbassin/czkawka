@@ -7,6 +7,7 @@ use crate::notebook_info::{NOTEBOOKS_INFO, NotebookObject};
 use glib::translate::ToGlibPtr;
 use gtk4::prelude::*;
 use gtk4::{Builder, CellRendererText, CellRendererToggle, EventControllerKey, GestureClick, ListStore, Notebook, ScrolledWindow, TreeView, TreeViewColumn};
+use gtk4::{CellRendererText, TreeViewColumn};
 
 #[derive(Clone)]
 pub struct CommonTreeViews {
@@ -190,14 +191,15 @@ impl SubView {
             NotebookMainEnum::Symlinks => {
                 create_default_selection_button_column(tree_view, ColumnsInvalidSymlinks::SelectionButton as i32, model, None);
 
-                create_default_column(tree_view, ColumnsInvalidSymlinks::Name as i32, Some(None), None);
-                create_default_column(tree_view, ColumnsInvalidSymlinks::Path as i32, Some(None), None);
-                create_default_column(tree_view, ColumnsInvalidSymlinks::DestinationPath as i32, Some(None), None);
-                create_default_column(tree_view, ColumnsInvalidSymlinks::TypeOfError as i32, Some(None), None);
-                create_default_column(
+                create_default_columns(
                     tree_view,
-                    ColumnsInvalidSymlinks::Modification as i32,
-                    Some(Some(ColumnsInvalidSymlinks::ModificationAsSecs as i32)),
+                    &[
+                        (ColumnsInvalidSymlinks::Name as i32, ColumnSort::Default),
+                        (ColumnsInvalidSymlinks::Path as i32, ColumnSort::Default),
+                        (ColumnsInvalidSymlinks::DestinationPath as i32, ColumnSort::Default),
+                        (ColumnsInvalidSymlinks::TypeOfError as i32, ColumnSort::Default),
+                        (ColumnsInvalidSymlinks::Modification as i32, ColumnSort::Custom(ColumnsInvalidSymlinks::ModificationAsSecs as i32)),
+                    ],
                     None,
                 );
             }
@@ -226,6 +228,14 @@ impl SubView {
     }
 }
 
+#[derive(Clone, Copy)]
+pub enum ColumnSort {
+    None,
+    Default,
+    Custom(i32),
+}
+
+
 pub(crate) fn create_default_selection_button_column(
     tree_view: &TreeView,
     column_id: i32,
@@ -250,6 +260,33 @@ pub(crate) fn create_default_selection_button_column(
     }
     tree_view.append_column(&column);
     (renderer, column)
+}
+
+
+
+fn create_default_columns(
+    tree_view: &TreeView,
+    columns: &[(i32, ColumnSort)],
+    colors_columns_id: Option<(i32, i32)>,
+) {
+    for (col_id, sort_method) in columns {
+        let renderer = CellRendererText::new();
+        let column: TreeViewColumn = TreeViewColumn::new();
+        column.pack_start(&renderer, true);
+        column.set_resizable(true);
+        column.set_min_width(50);
+        column.add_attribute(&renderer, "text", *col_id);
+        match sort_method {
+            ColumnSort::None => {},
+            ColumnSort::Default => column.set_sort_column_id(*col_id),
+            ColumnSort::Custom(val) => column.set_sort_column_id(*val),
+        }
+        if let Some(colors_columns_id) = colors_columns_id {
+            column.add_attribute(&renderer, "background", colors_columns_id.0);
+            column.add_attribute(&renderer, "foreground", colors_columns_id.1);
+        }
+        tree_view.append_column(&column);
+    }
 }
 
 #[expect(clippy::option_option)]
