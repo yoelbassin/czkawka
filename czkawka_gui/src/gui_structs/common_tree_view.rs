@@ -1,16 +1,13 @@
+use gtk4::prelude::*;
+use gtk4::{Builder, CellRendererText, CellRendererToggle, EventControllerKey, GestureClick, ListStore, Notebook, ScrolledWindow, SelectionMode, TreeView, TreeViewColumn};
+
 use crate::help_functions::{
     ColumnsBadExtensions, ColumnsBigFiles, ColumnsBrokenFiles, ColumnsDuplicates, ColumnsEmptyFiles, ColumnsEmptyFolders, ColumnsInvalidSymlinks, ColumnsSameMusic,
-    ColumnsSimilarImages, ColumnsSimilarVideos, ColumnsTemporaryFiles, get_list_store,
+    ColumnsSimilarImages, ColumnsSimilarVideos, ColumnsTemporaryFiles,
 };
 use crate::notebook_enums::NotebookMainEnum;
 use crate::notebook_info::{NOTEBOOKS_INFO, NotebookObject};
-use glib::translate::ToGlibPtr;
-use gtk4::prelude::*;
-use gtk4::{
-    Builder, CellRendererText, CellRendererToggle, EventControllerKey, GestureClick, ListStore, Notebook, ScrolledWindow, SelectionMode, TreeModel, TreePath, TreeSelection,
-    TreeView, TreeViewColumn,
-};
-use crate::opening_selecting_records::{select_function_always_true, select_function_header};
+use crate::opening_selecting_records::select_function_header;
 
 #[derive(Clone)]
 pub struct CommonTreeViews {
@@ -18,6 +15,14 @@ pub struct CommonTreeViews {
     pub notebook_main: Notebook,
 }
 impl CommonTreeViews {
+    pub fn get_tree_view_from_its_name(&self, name: &str) -> TreeView {
+        for subview in &self.subviews {
+            if subview.tree_view_name == name {
+                return subview.tree_view.clone();
+            }
+        }
+        panic!("Cannot find tree view with name {name}");
+    }
     pub fn get_current(&self) -> SubView {
         let nb_number = self.notebook_main.current_page().expect("Current page not set");
         self.subviews.get(nb_number as usize).expect("Cannot find current notebook tab").clone()
@@ -28,12 +33,7 @@ impl CommonTreeViews {
     }
     pub fn get_current_model(&self) -> ListStore {
         let nb_number = self.notebook_main.current_page().expect("Current page not set");
-        self.subviews
-            .get(nb_number as usize)
-            .expect("Cannot find current notebook tab")
-            .tree_view
-            .get_model()
-            .clone()
+        self.subviews.get(nb_number as usize).expect("Cannot find current notebook tab").tree_view.get_model()
     }
     pub fn setup(&self) {
         for subview in &self.subviews {
@@ -54,6 +54,27 @@ impl TreeViewListStoreTrait for TreeView {
             .clone()
     }
 }
+pub trait GetTreeViewTrait {
+    fn get_tree_view(&self) -> TreeView;
+}
+impl GetTreeViewTrait for &EventControllerKey {
+    fn get_tree_view(&self) -> TreeView {
+        self.widget()
+            .expect("EventControllerKey has no widget")
+            .downcast_ref::<TreeView>()
+            .expect("EventControllerKey widget is not TreeView")
+            .clone()
+    }
+}
+impl GetTreeViewTrait for &GestureClick {
+    fn get_tree_view(&self) -> TreeView {
+        self.widget()
+            .expect("GestureClick has no widget")
+            .downcast_ref::<TreeView>()
+            .expect("GestureClick widget is not TreeView")
+            .clone()
+    }
+}
 
 #[derive(Clone)]
 pub struct SubView {
@@ -67,52 +88,20 @@ pub struct SubView {
     pub tree_view_name: String,
 }
 
-// fn create_column_types(
-//     scrolled_window: &ScrolledWindow,
-//     tree_view: &TreeView,
-//     notebook_enum: NotebookMainEnum,
-//     select_function: Option<fn(&TreeSelection, &TreeModel, &TreePath, bool) -> bool>,
-//     create_tree_view_func: fn(&TreeView),
-//     image_preview: Option<&Picture>,
-// ) {
-//     if let Some(image_preview) = image_preview {
-//         image_preview.hide();
-//     }
-//     let list_store: gtk4::ListStore = gtk4::ListStore::new(NOTEBOOKS_INFO[notebook_enum as usize].columns_types);
-//
-//     tree_view.set_model(Some(&list_store));
-//     tree_view.selection().set_mode(SelectionMode::Multiple);
-//     if let Some(select_function) = select_function {
-//         tree_view.selection().set_select_function(select_function);
-//     }
-//
-//     create_tree_view_func(tree_view);
-//
-//     tree_view.set_widget_name(get_tree_view_name_from_notebook_enum(notebook_enum));
-//     scrolled_window.set_child(Some(tree_view));
-//     scrolled_window.show();
-// }
-
 impl SubView {
-    pub fn new(
-        builder: &Builder,
-        scrolled_name: &str,
-        enum_value: NotebookMainEnum,
-        preview_str: Option<&str>,
-        tree_view_name: &str,
-    ) -> Self {
+    pub fn new(builder: &Builder, scrolled_name: &str, enum_value: NotebookMainEnum, preview_str: Option<&str>, tree_view_name: &str) -> Self {
         let tree_view: TreeView = TreeView::new();
         let event_controller_key: EventControllerKey = EventControllerKey::new();
         tree_view.add_controller(event_controller_key.clone());
         let gesture_click: GestureClick = GestureClick::new();
         tree_view.add_controller(gesture_click.clone());
 
-        let image_preview = preview_str.map(|name| builder.object(name).expect(format!("Cannot find preview image {}", name).as_str()));
+        let image_preview = preview_str.map(|name| builder.object(name).unwrap_or_else(|| panic!("Cannot find preview image {name}")));
 
         let notebook_object = NOTEBOOKS_INFO[enum_value as usize].clone();
 
         Self {
-            scrolled_window: builder.object(scrolled_name).expect(format!("Cannot find scrolled window {}", scrolled_name).as_str()),
+            scrolled_window: builder.object(scrolled_name).unwrap_or_else(|| panic!("Cannot find scrolled window {scrolled_name}")),
             tree_view,
             gesture_click,
             event_controller_key,
@@ -131,9 +120,9 @@ impl SubView {
         self.tree_view.set_model(Some(&ListStore::new(self.notebook_object.columns_types)));
         self.tree_view.selection().set_mode(SelectionMode::Multiple);
 
-        let start_select_function = if let Some(column_header) = self.notebook_object.column_header {
+        if let Some(column_header) = self.notebook_object.column_header {
             self.tree_view.selection().set_select_function(select_function_header(column_header));
-        };
+        }
 
         self.tree_view.set_vexpand(true);
 

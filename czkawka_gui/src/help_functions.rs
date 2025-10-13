@@ -388,22 +388,6 @@ pub(crate) fn get_notebook_enum_from_tree_view(tree_view: &TreeView) -> Notebook
     }
 }
 
-pub(crate) fn get_tree_view_name_from_notebook_enum(notebook_enum: NotebookMainEnum) -> &'static str {
-    match notebook_enum {
-        NotebookMainEnum::Duplicate => "tree_view_duplicate_finder",
-        NotebookMainEnum::EmptyDirectories => "tree_view_empty_folder_finder",
-        NotebookMainEnum::EmptyFiles => "tree_view_empty_files_finder",
-        NotebookMainEnum::Temporary => "tree_view_temporary_files_finder",
-        NotebookMainEnum::BigFiles => "tree_view_big_files_finder",
-        NotebookMainEnum::SimilarImages => "tree_view_similar_images_finder",
-        NotebookMainEnum::SimilarVideos => "tree_view_similar_videos_finder",
-        NotebookMainEnum::SameMusic => "tree_view_same_music_finder",
-        NotebookMainEnum::Symlinks => "tree_view_invalid_symlinks",
-        NotebookMainEnum::BrokenFiles => "tree_view_broken_files",
-        NotebookMainEnum::BadExtensions => "tree_view_bad_extensions",
-    }
-}
-
 pub(crate) fn get_notebook_upper_enum_from_tree_view(tree_view: &TreeView) -> NotebookUpperEnum {
     match (*tree_view).widget_name().to_string().as_str() {
         "tree_view_upper_included_directories" => NotebookUpperEnum::IncludedDirectories,
@@ -545,10 +529,10 @@ pub(crate) fn clean_invalid_headers(model: &ListStore, column_header: i32, colum
     }
 
     // Last step, remove orphan header if exists
-    if let Some(iter) = model.iter_first() {
-        if !model.iter_next(&iter) {
-            model.clear();
-        }
+    if let Some(iter) = model.iter_first()
+        && !model.iter_next(&iter)
+    {
+        model.clear();
     }
 }
 

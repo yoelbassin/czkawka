@@ -1,6 +1,4 @@
-use gtk4::Notebook;
 use czkawka_core::TOOLS_NUMBER;
-use crate::help_functions::{ColumnsDuplicates, ColumnsSameMusic, ColumnsSimilarImages, ColumnsSimilarVideos};
 
 pub const NUMBER_OF_NOTEBOOK_MAIN_TABS: usize = TOOLS_NUMBER;
 // pub const NUMBER_OF_NOTEBOOK_UPPER_TABS: usize = 3;

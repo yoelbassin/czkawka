@@ -4,33 +4,17 @@ use czkawka_core::tools::big_file::SearchMode;
 use czkawka_core::tools::similar_images::SIMILAR_VALUES;
 use czkawka_core::tools::similar_images::core::get_string_from_similarity;
 use gtk4::prelude::*;
-use gtk4::{Builder, CheckButton, ComboBoxText, Entry, EventControllerKey, GestureClick, Label, Notebook, Picture, Scale, ScrolledWindow, TreeView, Widget};
-use std::collections::HashMap;
+use gtk4::{Builder, CheckButton, ComboBoxText, Entry, EventControllerKey, GestureClick, Label, Notebook, Picture, Scale, TreeView, Widget};
 
 use crate::flg;
 use crate::gui_structs::common_tree_view::{CommonTreeViews, SubView};
 use crate::help_combo_box::{AUDIO_TYPE_CHECK_METHOD_COMBO_BOX, BIG_FILES_CHECK_METHOD_COMBO_BOX, DUPLICATES_CHECK_METHOD_COMBO_BOX, IMAGES_HASH_SIZE_COMBO_BOX};
-use crate::help_functions::{get_all_direct_children, ColumnsDuplicates};
+use crate::help_functions::get_all_direct_children;
 use crate::notebook_enums::{NUMBER_OF_NOTEBOOK_MAIN_TABS, NotebookMainEnum};
-use crate::notebook_info::{NOTEBOOKS_INFO, NotebookObject};
-
-
 
 #[derive(Clone)]
 pub struct GuiMainNotebook {
     pub notebook_main: Notebook,
-
-    pub scrolled_window_duplicate_finder: ScrolledWindow,
-    pub scrolled_window_empty_folder_finder: ScrolledWindow,
-    pub scrolled_window_empty_files_finder: ScrolledWindow,
-    pub scrolled_window_temporary_files_finder: ScrolledWindow,
-    pub scrolled_window_big_files_finder: ScrolledWindow,
-    pub scrolled_window_similar_images_finder: ScrolledWindow,
-    pub scrolled_window_similar_videos_finder: ScrolledWindow,
-    pub scrolled_window_same_music_finder: ScrolledWindow,
-    pub scrolled_window_invalid_symlinks: ScrolledWindow,
-    pub scrolled_window_broken_files: ScrolledWindow,
-    pub scrolled_window_bad_extensions: ScrolledWindow,
 
     pub tree_view_duplicate_finder: TreeView,
     pub tree_view_empty_folder_finder: TreeView,
@@ -136,24 +120,11 @@ pub struct GuiMainNotebook {
     pub scale_similarity_same_music: Scale,
 
     pub common_tree_views: CommonTreeViews,
-
 }
 
 impl GuiMainNotebook {
     pub(crate) fn create_from_builder(builder: &Builder) -> Self {
         let notebook_main: Notebook = builder.object("notebook_main").expect("Cambalache");
-
-        let scrolled_window_duplicate_finder: ScrolledWindow = builder.object("scrolled_window_duplicate_finder").expect("Cambalache");
-        let scrolled_window_empty_folder_finder: ScrolledWindow = builder.object("scrolled_window_empty_folder_finder").expect("Cambalache");
-        let scrolled_window_empty_files_finder: ScrolledWindow = builder.object("scrolled_window_empty_files_finder").expect("Cambalache");
-        let scrolled_window_temporary_files_finder: ScrolledWindow = builder.object("scrolled_window_temporary_files_finder").expect("Cambalache");
-        let scrolled_window_big_files_finder: ScrolledWindow = builder.object("scrolled_window_big_files_finder").expect("Cambalache");
-        let scrolled_window_similar_images_finder: ScrolledWindow = builder.object("scrolled_window_similar_images_finder").expect("Cambalache");
-        let scrolled_window_similar_videos_finder: ScrolledWindow = builder.object("scrolled_window_similar_videos_finder").expect("Cambalache");
-        let scrolled_window_same_music_finder: ScrolledWindow = builder.object("scrolled_window_same_music_finder").expect("Cambalache");
-        let scrolled_window_invalid_symlinks: ScrolledWindow = builder.object("scrolled_window_invalid_symlinks").expect("Cambalache");
-        let scrolled_window_broken_files: ScrolledWindow = builder.object("scrolled_window_broken_files").expect("Cambalache");
-        let scrolled_window_bad_extensions: ScrolledWindow = builder.object("scrolled_window_bad_extensions").expect("Cambalache");
 
         let tree_view_duplicate_finder: TreeView = TreeView::new();
         tree_view_duplicate_finder.set_widget_name("PIERD");
@@ -286,27 +257,15 @@ impl GuiMainNotebook {
             SubView::new(builder, "scrolled_window_bad_extensions", NotebookMainEnum::BadExtensions, None, "tree_view_bad_extensions")
         ]
         .into_iter()
-        .map(|sv| sv)
         .collect();
 
         let common_tree_views = CommonTreeViews {
             notebook_main: notebook_main.clone(),
-            subviews: subviews.clone(),
+            subviews,
         };
 
         Self {
             notebook_main,
-            scrolled_window_duplicate_finder,
-            scrolled_window_empty_folder_finder,
-            scrolled_window_empty_files_finder,
-            scrolled_window_temporary_files_finder,
-            scrolled_window_big_files_finder,
-            scrolled_window_similar_images_finder,
-            scrolled_window_similar_videos_finder,
-            scrolled_window_same_music_finder,
-            scrolled_window_invalid_symlinks,
-            scrolled_window_broken_files,
-            scrolled_window_bad_extensions,
             tree_view_duplicate_finder,
             tree_view_empty_folder_finder,
             tree_view_empty_files_finder,

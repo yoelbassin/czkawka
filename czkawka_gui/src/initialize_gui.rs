@@ -5,22 +5,19 @@ use czkawka_core::common::image::get_dynamic_image_from_path;
 use czkawka_core::tools::similar_images::SIMILAR_VALUES;
 use czkawka_core::tools::similar_videos::MAX_TOLERANCE;
 use gdk4::gdk_pixbuf::Pixbuf;
-use glib::ffi::guint;
 use glib::types::Type;
 use gtk4::gdk_pixbuf::InterpType;
 use gtk4::prelude::*;
-use gtk4::{CheckButton, Picture, ScrolledWindow, SelectionMode, TextView, TreeModel, TreePath, TreeSelection, TreeView};
+use gtk4::{CheckButton, Picture, SelectionMode, TextView, TreeView};
 
-use crate::create_tree_view::{
-    create_tree_view_excluded_directories, create_tree_view_included_directories,
-};
+use crate::create_tree_view::{create_tree_view_excluded_directories, create_tree_view_included_directories};
 use crate::gui_structs::gui_data::GuiData;
 use crate::help_combo_box::{
     DUPLICATES_CHECK_METHOD_COMBO_BOX, DUPLICATES_HASH_TYPE_COMBO_BOX, IMAGES_HASH_SIZE_COMBO_BOX, IMAGES_HASH_TYPE_COMBO_BOX, IMAGES_RESIZE_ALGORITHM_COMBO_BOX,
 };
 use crate::help_functions::{
-    KEY_DELETE, add_text_to_text_view, get_full_name_from_path_name, get_list_store, get_pixbuf_from_dynamic_image, get_tree_view_name_from_notebook_enum,
-    get_tree_view_name_from_notebook_upper_enum, resize_pixbuf_dimension, scale_set_min_max_values,
+    KEY_DELETE, add_text_to_text_view, get_full_name_from_path_name, get_list_store, get_pixbuf_from_dynamic_image, get_tree_view_name_from_notebook_upper_enum,
+    resize_pixbuf_dimension, scale_set_min_max_values,
 };
 use crate::language_functions::LANGUAGES_ALL;
 use crate::localizer_core::generate_translation_hashmap;
@@ -28,7 +25,7 @@ use crate::notebook_enums::{NotebookMainEnum, NotebookUpperEnum};
 use crate::notebook_info::NOTEBOOKS_INFO;
 use crate::opening_selecting_records::{
     opening_double_click_function, opening_double_click_function_directories, opening_enter_function_ported, opening_enter_function_ported_upper_directories,
-    opening_middle_mouse_function, select_function_duplicates, select_function_same_music, select_function_similar_images, select_function_similar_videos,
+    opening_middle_mouse_function,
 };
 use crate::{delete_things, flg};
 
@@ -195,32 +192,6 @@ pub(crate) fn initialize_gui(gui_data: &GuiData) {
     // This not need to be run in different code block, but this looks a little less complicated if is available in
     connect_event_buttons(gui_data);
     connect_event_mouse(gui_data);
-}
-
-fn create_column_types(
-    scrolled_window: &ScrolledWindow,
-    tree_view: &TreeView,
-    notebook_enum: NotebookMainEnum,
-    select_function: Option<fn(&TreeSelection, &TreeModel, &TreePath, bool) -> bool>,
-    create_tree_view_func: fn(&TreeView),
-    image_preview: Option<&Picture>,
-) {
-    if let Some(image_preview) = image_preview {
-        image_preview.hide();
-    }
-    let list_store: gtk4::ListStore = gtk4::ListStore::new(NOTEBOOKS_INFO[notebook_enum as usize].columns_types);
-
-    tree_view.set_model(Some(&list_store));
-    tree_view.selection().set_mode(SelectionMode::Multiple);
-    if let Some(select_function) = select_function {
-        tree_view.selection().set_select_function(select_function);
-    }
-
-    create_tree_view_func(tree_view);
-
-    tree_view.set_widget_name(get_tree_view_name_from_notebook_enum(notebook_enum));
-    scrolled_window.set_child(Some(tree_view));
-    scrolled_window.show();
 }
 
 fn connect_event_mouse(gui_data: &GuiData) {

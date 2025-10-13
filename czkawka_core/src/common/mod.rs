@@ -17,11 +17,13 @@ use std::cmp::Ordering;
 use std::ffi::OsString;
 use std::io::Error;
 use std::path::{Path, PathBuf};
-use std::{fs, io, thread};
 use std::sync::Mutex;
+use std::{fs, io, thread};
+
 use items::SingleExcludedItem;
 use log::debug;
 use once_cell::sync::Lazy;
+
 use crate::common::consts::{DEFAULT_WORKER_THREAD_SIZE, TEMP_HARDLINK_FILE};
 
 static NUMBER_OF_THREADS: Lazy<Mutex<Option<usize>>> = Lazy::new(|| Mutex::new(None));

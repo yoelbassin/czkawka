@@ -47,7 +47,6 @@ use crate::connect_things::connect_same_music_mode_changed::connect_same_music_c
 use crate::initialize_gui::initialize_gui;
 use crate::language_functions::LANGUAGES_ALL;
 use crate::saving_loading::{DEFAULT_MAXIMAL_FILE_SIZE, DEFAULT_MINIMAL_CACHE_SIZE, DEFAULT_MINIMAL_FILE_SIZE, load_configuration, reset_configuration, save_configuration};
-use crate::tests::validate_notebook_data;
 
 mod cli;
 mod compute_results;
@@ -68,7 +67,6 @@ mod taskbar_progress;
 mod taskbar_progress_dummy;
 #[cfg(target_os = "windows")]
 mod taskbar_progress_win;
-mod tests;
 
 fn main() {
     let (infos, warnings) = set_config_cache_path("Czkawka", "Czkawka");
@@ -98,7 +96,6 @@ fn build_ui(application: &Application, cli_args: Option<&CliResult>) {
     let (progress_sender, progress_receiver): (Sender<ProgressData>, Receiver<ProgressData>) = unbounded();
 
     initialize_gui(&gui_data);
-    validate_notebook_data(&gui_data); // Must be run after initialization of gui, to check if everything was properly setup
     reset_configuration(false, &gui_data.upper_notebook, &gui_data.main_notebook, &gui_data.settings, &gui_data.text_view_errors); // Fallback for invalid loading setting project
     load_system_language(&gui_data); // Check for default system language, must be loaded after initializing GUI and before loading settings from file
     load_configuration(

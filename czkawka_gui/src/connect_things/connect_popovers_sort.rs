@@ -271,7 +271,7 @@ mod test {
                 list_store.set(&list_store.append(), &a);
                 since_last_header += 1;
                 // After at least 2 non-header rows, randomly decide to insert a header next
-                if since_last_header >= 2 && random::<u8>() % 3 == 0 {
+                if since_last_header >= 2 && random::<u8>().is_multiple_of(3) {
                     need_header = true;
                 }
                 i += 1;
