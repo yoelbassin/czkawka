@@ -55,7 +55,7 @@ async fn sym_hard_link_things(gui_data: GuiData, hardlinking: TypeOfTool) {
     let image_preview_duplicates = gui_data.main_notebook.image_preview_duplicates.clone();
 
     let text_view_errors = gui_data.text_view_errors.clone();
-    let preview_path = gui_data.preview_path.clone();
+    let preview_path = gui_data.main_notebook.common_tree_views.preview_path.clone();
     let window_main = gui_data.window_main.clone();
 
     let nb_number = notebook_main.current_page().expect("Current page not set");

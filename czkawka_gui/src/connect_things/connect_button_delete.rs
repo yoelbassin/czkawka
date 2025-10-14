@@ -25,8 +25,6 @@ pub(crate) fn connect_button_delete(gui_data: &GuiData) {
 }
 
 pub async fn delete_things(gui_data: GuiData) {
-    // validate_notebook_data(&gui_data);
-
     let notebook_main = gui_data.main_notebook.notebook_main.clone();
     let window_main = gui_data.window_main.clone();
     let check_button_settings_confirm_deletion = gui_data.settings.check_button_settings_confirm_deletion.clone();
@@ -38,7 +36,7 @@ pub async fn delete_things(gui_data: GuiData) {
 
     let check_button_settings_use_trash = gui_data.settings.check_button_settings_use_trash.clone();
 
-    let preview_path = gui_data.preview_path.clone();
+    let preview_path = gui_data.main_notebook.common_tree_views.preview_path.clone();
 
     let text_view_errors = gui_data.text_view_errors.clone();
 

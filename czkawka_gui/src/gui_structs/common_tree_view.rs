@@ -1,20 +1,37 @@
-use gtk4::prelude::*;
-use gtk4::{Builder, CellRendererText, CellRendererToggle, EventControllerKey, GestureClick, ListStore, Notebook, ScrolledWindow, SelectionMode, TreeView, TreeViewColumn};
+use std::cell::RefCell;
+use std::rc::Rc;
 
+use czkawka_core::common::image::get_dynamic_image_from_path;
+use czkawka_core::localizer_core::generate_translation_hashmap;
+use gdk4::gdk_pixbuf::{InterpType, Pixbuf};
+use gtk4::prelude::*;
+use gtk4::{
+    Builder, CellRendererText, CellRendererToggle, CheckButton, EventControllerKey, GestureClick, ListStore, Notebook, Picture, ScrolledWindow, SelectionMode, TextView, TreeView,
+    TreeViewColumn,
+};
+
+use crate::connect_things::connect_button_delete::delete_things;
+use crate::flg;
+use crate::gui_structs::gui_data::GuiData;
 use crate::help_functions::{
     ColumnsBadExtensions, ColumnsBigFiles, ColumnsBrokenFiles, ColumnsDuplicates, ColumnsEmptyFiles, ColumnsEmptyFolders, ColumnsInvalidSymlinks, ColumnsSameMusic,
-    ColumnsSimilarImages, ColumnsSimilarVideos, ColumnsTemporaryFiles,
+    ColumnsSimilarImages, ColumnsSimilarVideos, ColumnsTemporaryFiles, KEY_DELETE, add_text_to_text_view, get_full_name_from_path_name, get_pixbuf_from_dynamic_image,
+    resize_pixbuf_dimension,
 };
 use crate::notebook_enums::NotebookMainEnum;
 use crate::notebook_info::{NOTEBOOKS_INFO, NotebookObject};
-use crate::opening_selecting_records::select_function_header;
+use crate::opening_selecting_records::{opening_double_click_function, opening_enter_function_ported, opening_middle_mouse_function, select_function_header};
 
 #[derive(Clone)]
 pub struct CommonTreeViews {
     pub subviews: Vec<SubView>,
     pub notebook_main: Notebook,
+    pub preview_path: Rc<RefCell<String>>,
 }
 impl CommonTreeViews {
+    pub fn get_subview(&self, item: NotebookMainEnum) -> &SubView {
+        &self.subviews[item as usize]
+    }
     pub fn get_tree_view_from_its_name(&self, name: &str) -> TreeView {
         for subview in &self.subviews {
             if subview.tree_view_name == name {
@@ -35,9 +52,9 @@ impl CommonTreeViews {
         let nb_number = self.notebook_main.current_page().expect("Current page not set");
         self.subviews.get(nb_number as usize).expect("Cannot find current notebook tab").tree_view.get_model()
     }
-    pub fn setup(&self) {
+    pub fn setup(&self, gui_data: &GuiData) {
         for subview in &self.subviews {
-            subview.setup();
+            subview.setup(&self.preview_path, gui_data);
         }
     }
 }
@@ -84,12 +101,25 @@ pub struct SubView {
     pub event_controller_key: EventControllerKey,
     pub notebook_object: NotebookObject,
     pub enum_value: NotebookMainEnum,
-    pub image_preview: Option<gtk4::Picture>,
     pub tree_view_name: String,
+    pub preview_struct: Option<PreviewStruct>,
+}
+
+#[derive(Clone)]
+pub struct PreviewStruct {
+    pub image_preview: Picture,
+    pub settings_show_preview: CheckButton,
 }
 
 impl SubView {
-    pub fn new(builder: &Builder, scrolled_name: &str, enum_value: NotebookMainEnum, preview_str: Option<&str>, tree_view_name: &str) -> Self {
+    pub fn new(
+        builder: &Builder,
+        scrolled_name: &str,
+        enum_value: NotebookMainEnum,
+        preview_str: Option<&str>,
+        tree_view_name: &str,
+        settings_show_preview: Option<CheckButton>,
+    ) -> Self {
         let tree_view: TreeView = TreeView::new();
         let event_controller_key: EventControllerKey = EventControllerKey::new();
         tree_view.add_controller(event_controller_key.clone());
@@ -100,6 +130,15 @@ impl SubView {
 
         let notebook_object = NOTEBOOKS_INFO[enum_value as usize].clone();
 
+        let preview_struct = if let (Some(image_preview), Some(settings_show_preview)) = (image_preview, settings_show_preview) {
+            Some(PreviewStruct {
+                image_preview,
+                settings_show_preview,
+            })
+        } else {
+            None
+        };
+
         Self {
             scrolled_window: builder.object(scrolled_name).unwrap_or_else(|| panic!("Cannot find scrolled window {scrolled_name}")),
             tree_view,
@@ -107,16 +146,12 @@ impl SubView {
             event_controller_key,
             notebook_object,
             enum_value,
-            image_preview,
+            preview_struct,
             tree_view_name: tree_view_name.to_string(),
         }
     }
 
-    fn setup(&self) {
-        if let Some(image_preview) = &self.image_preview {
-            image_preview.hide();
-        }
-
+    fn _setup_tree_view(&self) {
         self.tree_view.set_model(Some(&ListStore::new(self.notebook_object.columns_types)));
         self.tree_view.selection().set_mode(SelectionMode::Multiple);
 
@@ -131,6 +166,93 @@ impl SubView {
         self.tree_view.set_widget_name(&self.tree_view_name);
         self.scrolled_window.set_child(Some(&self.tree_view));
         self.scrolled_window.show();
+    }
+    fn _setup_gesture_click(&self) {
+        self.gesture_click.set_button(0);
+        self.gesture_click.connect_pressed(opening_double_click_function);
+        self.gesture_click.connect_released(opening_middle_mouse_function); // TODO GTK 4 - https://github.com/gtk-rs/gtk4-rs/issues/1043
+    }
+
+    fn _setup_evk(&self, gui_data: &GuiData) {
+        let gui_data_clone = gui_data.clone();
+        self.event_controller_key.connect_key_pressed(opening_enter_function_ported);
+
+        self.event_controller_key
+            .connect_key_released(move |_event_controller_key, _key_value, key_code, _modifier_type| {
+                if key_code == KEY_DELETE {
+                    glib::MainContext::default().spawn_local(delete_things(gui_data_clone.clone()));
+                }
+            });
+    }
+
+    fn _connect_show_mouse_preview(&self, gui_data: &GuiData, preview_path: &Rc<RefCell<String>>) {
+        // TODO GTK 4, currently not works, connect_pressed shows previous thing - https://gitlab.gnome.org/GNOME/gtk/-/issues/4939
+        // Use connect_released when it will be fixed, currently using connect_row_activated workaround
+        let use_rust_preview = gui_data.settings.check_button_settings_use_rust_preview.clone();
+        let text_view_errors = gui_data.text_view_errors.clone();
+        if let Some(preview_struct) = self.preview_struct.clone() {
+            self.tree_view.set_property("activate-on-single-click", true);
+            let preview_path = preview_path.clone();
+            let notebook_object = self.notebook_object.clone();
+
+            self.tree_view.clone().connect_row_activated(move |tree_view, _b, _c| {
+                show_preview(
+                    tree_view,
+                    &text_view_errors,
+                    &preview_struct.settings_show_preview,
+                    &preview_struct.image_preview,
+                    &preview_path,
+                    notebook_object.column_path,
+                    notebook_object.column_name,
+                    use_rust_preview.is_active(),
+                );
+            });
+        }
+    }
+    fn _connect_show_keyboard_preview(&self, gui_data: &GuiData, preview_path: &Rc<RefCell<String>>, preview_struct: &PreviewStruct) {
+        let use_rust_preview = gui_data.settings.check_button_settings_use_rust_preview.clone();
+        let text_view_errors = gui_data.text_view_errors.clone();
+        let check_button_settings_show_preview = preview_struct.settings_show_preview.clone();
+        let image_preview = preview_struct.image_preview.clone();
+        let gui_data_clone = gui_data.clone();
+
+        self.event_controller_key.connect_key_pressed(opening_enter_function_ported);
+        let preview_path = preview_path.clone();
+        let notebook_object = self.notebook_object.clone();
+
+        self.event_controller_key
+            .clone()
+            .connect_key_released(move |event_controller_key, _key_value, key_code, _modifier_type| {
+                if key_code == KEY_DELETE {
+                    glib::MainContext::default().spawn_local(delete_things(gui_data_clone.clone()));
+                }
+                show_preview(
+                    &event_controller_key.get_tree_view(),
+                    &text_view_errors,
+                    &check_button_settings_show_preview,
+                    &image_preview,
+                    &preview_path,
+                    notebook_object.column_path,
+                    notebook_object.column_name,
+                    use_rust_preview.is_active(),
+                );
+            });
+    }
+
+    fn setup(&self, preview_path: &Rc<RefCell<String>>, gui_data: &GuiData) {
+        if let Some(preview_struct) = &self.preview_struct {
+            preview_struct.image_preview.hide();
+        }
+        self._setup_tree_view();
+        self._setup_gesture_click();
+        self._connect_show_mouse_preview(gui_data, preview_path);
+
+        // Items with image preview, are differently handled
+        if let Some(preview_struct) = &self.preview_struct {
+            self._connect_show_keyboard_preview(gui_data, preview_path, preview_struct);
+        } else {
+            self._setup_evk(gui_data);
+        }
     }
     fn _setup_tree_view_config(&self) {
         let tree_view = &self.tree_view;
@@ -354,5 +476,96 @@ pub(crate) fn create_default_columns(tree_view: &TreeView, columns: &[(i32, Colu
             column.add_attribute(&renderer, "foreground", colors_columns_id.1);
         }
         tree_view.append_column(&column);
+    }
+}
+
+pub(crate) fn show_preview(
+    tree_view: &TreeView,
+    text_view_errors: &TextView,
+    check_button_settings_show_preview: &CheckButton,
+    image_preview: &Picture,
+    preview_path: &Rc<RefCell<String>>,
+    column_path: i32,
+    column_name: i32,
+    use_rust_preview: bool,
+) {
+    let (selected_rows, tree_model) = tree_view.selection().selected_rows();
+
+    let mut created_image = false;
+
+    // Only show preview when selected is only one item, because there is no method to recognize current clicked item in multiselection
+    if selected_rows.len() == 1 && check_button_settings_show_preview.is_active() {
+        let tree_path = selected_rows[0].clone();
+        // TODO labels on {} are in testing stage, so we just ignore for now this warning until found better idea how to fix this
+        #[expect(clippy::never_loop)]
+        'dir: loop {
+            let path = tree_model.get::<String>(&tree_model.iter(&tree_path).expect("Invalid tree_path"), column_path);
+            let name = tree_model.get::<String>(&tree_model.iter(&tree_path).expect("Invalid tree_path"), column_name);
+
+            let file_name = get_full_name_from_path_name(&path, &name);
+
+            if file_name == preview_path.borrow().as_str() {
+                return; // Preview is already created, no need to recreate it
+            }
+
+            let mut pixbuf = if use_rust_preview {
+                let image = match get_dynamic_image_from_path(&file_name) {
+                    Ok(t) => t,
+                    Err(e) => {
+                        add_text_to_text_view(text_view_errors, flg!("preview_image_opening_failure", name = file_name, reason = e).as_str());
+                        break 'dir;
+                    }
+                };
+
+                match get_pixbuf_from_dynamic_image(&image) {
+                    Ok(t) => t,
+                    Err(e) => {
+                        add_text_to_text_view(text_view_errors, flg!("preview_image_opening_failure", name = file_name, reason = e).as_str());
+                        break 'dir;
+                    }
+                }
+            } else {
+                match Pixbuf::from_file(&file_name) {
+                    Ok(pixbuf) => pixbuf,
+                    Err(e) => {
+                        add_text_to_text_view(
+                            text_view_errors,
+                            flg!(
+                                "preview_image_opening_failure",
+                                generate_translation_hashmap(vec![("name", file_name), ("reason", e.to_string())])
+                            )
+                            .as_str(),
+                        );
+                        break 'dir;
+                    }
+                }
+            };
+            pixbuf = match resize_pixbuf_dimension(&pixbuf, (800, 800), InterpType::Bilinear) {
+                None => {
+                    add_text_to_text_view(text_view_errors, flg!("preview_image_resize_failure", name = file_name).as_str());
+                    break 'dir;
+                }
+                Some(pixbuf) => pixbuf,
+            };
+
+            image_preview.set_pixbuf(Some(&pixbuf));
+            {
+                let mut preview_path = preview_path.borrow_mut();
+                *preview_path = file_name;
+            }
+
+            created_image = true;
+
+            break 'dir;
+        }
+    }
+    if created_image {
+        image_preview.show();
+    } else {
+        image_preview.hide();
+        {
+            let mut preview_path = preview_path.borrow_mut();
+            *preview_path = String::new();
+        }
     }
 }

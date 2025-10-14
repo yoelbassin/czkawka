@@ -3,6 +3,7 @@ use gtk4::prelude::*;
 use gtk4::{GestureClick, TreeModel, TreePath, TreeSelection};
 use log::{debug, error};
 
+use crate::gui_structs::common_tree_view::GetTreeViewTrait;
 use crate::help_functions::{
     ColumnsDuplicates, ColumnsExcludedDirectory, ColumnsIncludedDirectory, ColumnsSameMusic, ColumnsSimilarImages, ColumnsSimilarVideos, KEY_ENTER, KEY_SPACE,
     get_full_name_from_path_name, get_list_store, get_notebook_object_from_tree_view, get_notebook_upper_enum_from_tree_view,
@@ -17,11 +18,7 @@ pub(crate) fn opening_enter_function_ported_upper_directories(
     key_code: u32,
     _modifier_type: ModifierType,
 ) -> glib::Propagation {
-    let tree_view = event_controller
-        .widget()
-        .expect("Item has no widget")
-        .downcast::<gtk4::TreeView>()
-        .expect("Widget is not TreeView");
+    let tree_view = event_controller.get_tree_view();
 
     if cfg!(debug_assertions) {
         debug!("Clicked at key: {key_code}");
@@ -48,11 +45,7 @@ pub(crate) fn opening_enter_function_ported_upper_directories(
 }
 
 pub(crate) fn opening_middle_mouse_function(gesture_click: &GestureClick, _number_of_clicks: i32, _b: f64, _c: f64) {
-    let tree_view = gesture_click
-        .widget()
-        .expect("Item has no widget")
-        .downcast::<gtk4::TreeView>()
-        .expect("Widget is not TreeView");
+    let tree_view = gesture_click.get_tree_view();
 
     let nt_object = get_notebook_object_from_tree_view(&tree_view);
     if let Some(column_header) = nt_object.column_header
@@ -63,11 +56,7 @@ pub(crate) fn opening_middle_mouse_function(gesture_click: &GestureClick, _numbe
 }
 
 pub(crate) fn opening_double_click_function_directories(gesture_click: &GestureClick, number_of_clicks: i32, _b: f64, _c: f64) {
-    let tree_view = gesture_click
-        .widget()
-        .expect("Item has no widget")
-        .downcast::<gtk4::TreeView>()
-        .expect("Widget is not TreeView");
+    let tree_view = gesture_click.get_tree_view();
 
     if number_of_clicks == 2 && (gesture_click.current_button() == 1 || gesture_click.current_button() == 3) {
         match get_notebook_upper_enum_from_tree_view(&tree_view) {
@@ -85,11 +74,7 @@ pub(crate) fn opening_double_click_function_directories(gesture_click: &GestureC
 }
 
 pub(crate) fn opening_enter_function_ported(event_controller: &gtk4::EventControllerKey, _key: Key, key_code: u32, _modifier_type: ModifierType) -> glib::Propagation {
-    let tree_view = event_controller
-        .widget()
-        .expect("Item has no widget")
-        .downcast::<gtk4::TreeView>()
-        .expect("Widget is not TreeView");
+    let tree_view = event_controller.get_tree_view();
     if cfg!(debug_assertions) {
         debug!("Clicked {key_code}");
     }
@@ -107,11 +92,7 @@ pub(crate) fn opening_enter_function_ported(event_controller: &gtk4::EventContro
 }
 
 pub(crate) fn opening_double_click_function(gesture_click: &GestureClick, number_of_clicks: i32, _b: f64, _c: f64) {
-    let tree_view = gesture_click
-        .widget()
-        .expect("Item has no widget")
-        .downcast::<gtk4::TreeView>()
-        .expect("Widget is not TreeView");
+    let tree_view = gesture_click.get_tree_view();
 
     let nt_object = get_notebook_object_from_tree_view(&tree_view);
     if number_of_clicks == 2 {

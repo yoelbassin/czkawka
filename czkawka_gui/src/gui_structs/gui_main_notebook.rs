@@ -1,13 +1,18 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use czkawka_core::common::model::CheckingMethod;
 use czkawka_core::localizer_core::{fnc_get_similarity_minimal, fnc_get_similarity_very_high};
 use czkawka_core::tools::big_file::SearchMode;
 use czkawka_core::tools::similar_images::SIMILAR_VALUES;
 use czkawka_core::tools::similar_images::core::get_string_from_similarity;
 use gtk4::prelude::*;
-use gtk4::{Builder, CheckButton, ComboBoxText, Entry, EventControllerKey, GestureClick, Label, Notebook, Picture, Scale, TreeView, Widget};
+use gtk4::{Builder, CheckButton, ComboBoxText, Entry, Label, Notebook, Picture, Scale, TreeView, Widget};
 
 use crate::flg;
 use crate::gui_structs::common_tree_view::{CommonTreeViews, SubView};
+use crate::gui_structs::gui_data::GuiData;
+use crate::gui_structs::gui_settings::GuiSettings;
 use crate::help_combo_box::{AUDIO_TYPE_CHECK_METHOD_COMBO_BOX, BIG_FILES_CHECK_METHOD_COMBO_BOX, DUPLICATES_CHECK_METHOD_COMBO_BOX, IMAGES_HASH_SIZE_COMBO_BOX};
 use crate::help_functions::get_all_direct_children;
 use crate::notebook_enums::{NUMBER_OF_NOTEBOOK_MAIN_TABS, NotebookMainEnum};
@@ -27,30 +32,6 @@ pub struct GuiMainNotebook {
     pub tree_view_invalid_symlinks: TreeView,
     pub tree_view_broken_files: TreeView,
     pub tree_view_bad_extensions: TreeView,
-
-    pub evk_tree_view_duplicate_finder: EventControllerKey,
-    pub evk_tree_view_empty_folder_finder: EventControllerKey,
-    pub evk_tree_view_empty_files_finder: EventControllerKey,
-    pub evk_tree_view_temporary_files_finder: EventControllerKey,
-    pub evk_tree_view_big_files_finder: EventControllerKey,
-    pub evk_tree_view_similar_images_finder: EventControllerKey,
-    pub evk_tree_view_similar_videos_finder: EventControllerKey,
-    pub evk_tree_view_same_music_finder: EventControllerKey,
-    pub evk_tree_view_invalid_symlinks: EventControllerKey,
-    pub evk_tree_view_broken_files: EventControllerKey,
-    pub evk_tree_view_bad_extensions: EventControllerKey,
-
-    pub gc_tree_view_duplicate_finder: GestureClick,
-    pub gc_tree_view_empty_folder_finder: GestureClick,
-    pub gc_tree_view_empty_files_finder: GestureClick,
-    pub gc_tree_view_temporary_files_finder: GestureClick,
-    pub gc_tree_view_big_files_finder: GestureClick,
-    pub gc_tree_view_similar_images_finder: GestureClick,
-    pub gc_tree_view_similar_videos_finder: GestureClick,
-    pub gc_tree_view_same_music_finder: GestureClick,
-    pub gc_tree_view_invalid_symlinks: GestureClick,
-    pub gc_tree_view_broken_files: GestureClick,
-    pub gc_tree_view_bad_extensions: GestureClick,
 
     // General
 
@@ -123,67 +104,8 @@ pub struct GuiMainNotebook {
 }
 
 impl GuiMainNotebook {
-    pub(crate) fn create_from_builder(builder: &Builder) -> Self {
+    pub(crate) fn create_from_builder(builder: &Builder, settings: &GuiSettings) -> Self {
         let notebook_main: Notebook = builder.object("notebook_main").expect("Cambalache");
-
-        let tree_view_duplicate_finder: TreeView = TreeView::new();
-        tree_view_duplicate_finder.set_widget_name("PIERD");
-        let tree_view_empty_folder_finder: TreeView = TreeView::new();
-        let tree_view_empty_files_finder: TreeView = TreeView::new();
-        let tree_view_temporary_files_finder: TreeView = TreeView::new();
-        let tree_view_big_files_finder: TreeView = TreeView::new();
-        let tree_view_similar_images_finder: TreeView = TreeView::new();
-        let tree_view_similar_videos_finder: TreeView = TreeView::new();
-        let tree_view_same_music_finder: TreeView = TreeView::new();
-        let tree_view_invalid_symlinks: TreeView = TreeView::new();
-        let tree_view_broken_files: TreeView = TreeView::new();
-        let tree_view_bad_extensions: TreeView = TreeView::new();
-
-        let evk_tree_view_duplicate_finder: EventControllerKey = EventControllerKey::new();
-        tree_view_duplicate_finder.add_controller(evk_tree_view_duplicate_finder.clone());
-        let evk_tree_view_empty_folder_finder: EventControllerKey = EventControllerKey::new();
-        tree_view_empty_folder_finder.add_controller(evk_tree_view_empty_folder_finder.clone());
-        let evk_tree_view_empty_files_finder: EventControllerKey = EventControllerKey::new();
-        tree_view_empty_files_finder.add_controller(evk_tree_view_empty_files_finder.clone());
-        let evk_tree_view_temporary_files_finder: EventControllerKey = EventControllerKey::new();
-        tree_view_temporary_files_finder.add_controller(evk_tree_view_temporary_files_finder.clone());
-        let evk_tree_view_big_files_finder: EventControllerKey = EventControllerKey::new();
-        tree_view_big_files_finder.add_controller(evk_tree_view_big_files_finder.clone());
-        let evk_tree_view_similar_images_finder: EventControllerKey = EventControllerKey::new();
-        tree_view_similar_images_finder.add_controller(evk_tree_view_similar_images_finder.clone());
-        let evk_tree_view_similar_videos_finder: EventControllerKey = EventControllerKey::new();
-        tree_view_similar_videos_finder.add_controller(evk_tree_view_similar_videos_finder.clone());
-        let evk_tree_view_same_music_finder: EventControllerKey = EventControllerKey::new();
-        tree_view_same_music_finder.add_controller(evk_tree_view_same_music_finder.clone());
-        let evk_tree_view_invalid_symlinks: EventControllerKey = EventControllerKey::new();
-        tree_view_invalid_symlinks.add_controller(evk_tree_view_invalid_symlinks.clone());
-        let evk_tree_view_broken_files: EventControllerKey = EventControllerKey::new();
-        tree_view_broken_files.add_controller(evk_tree_view_broken_files.clone());
-        let evk_tree_view_bad_extensions: EventControllerKey = EventControllerKey::new();
-        tree_view_bad_extensions.add_controller(evk_tree_view_bad_extensions.clone());
-
-        let gc_tree_view_duplicate_finder: GestureClick = GestureClick::new();
-        tree_view_duplicate_finder.add_controller(gc_tree_view_duplicate_finder.clone());
-        let gc_tree_view_empty_folder_finder: GestureClick = GestureClick::new();
-        tree_view_empty_folder_finder.add_controller(gc_tree_view_empty_folder_finder.clone());
-        let gc_tree_view_empty_files_finder: GestureClick = GestureClick::new();
-        tree_view_empty_files_finder.add_controller(gc_tree_view_empty_files_finder.clone());
-        let gc_tree_view_temporary_files_finder: GestureClick = GestureClick::new();
-        tree_view_temporary_files_finder.add_controller(gc_tree_view_temporary_files_finder.clone());
-        let gc_tree_view_big_files_finder: GestureClick = GestureClick::new();
-        tree_view_big_files_finder.add_controller(gc_tree_view_big_files_finder.clone());
-        let gc_tree_view_similar_images_finder: GestureClick = GestureClick::new();
-        tree_view_similar_images_finder.add_controller(gc_tree_view_similar_images_finder.clone());
-        let gc_tree_view_similar_videos_finder: GestureClick = GestureClick::new();
-        tree_view_similar_videos_finder.add_controller(gc_tree_view_similar_videos_finder.clone());
-        let gc_tree_view_same_music_finder: GestureClick = GestureClick::new();
-        tree_view_same_music_finder.add_controller(gc_tree_view_same_music_finder.clone());
-        let gc_tree_view_invalid_symlinks: GestureClick = GestureClick::new();
-        tree_view_invalid_symlinks.add_controller(gc_tree_view_invalid_symlinks.clone());
-        let gc_tree_view_broken_files: GestureClick = GestureClick::new();
-        tree_view_broken_files.add_controller(gc_tree_view_broken_files.clone());
-        let gc_tree_view_bad_extensions: GestureClick = GestureClick::new();
-        tree_view_bad_extensions.add_controller(gc_tree_view_bad_extensions.clone());
 
         let combo_box_duplicate_check_method: ComboBoxText = builder.object("combo_box_duplicate_check_method").expect("Cambalache");
         let combo_box_duplicate_hash_type: ComboBoxText = builder.object("combo_box_duplicate_hash_type").expect("Cambalache");
@@ -244,17 +166,17 @@ impl GuiMainNotebook {
 
         #[rustfmt::skip]
         let subviews: Vec<_> = [
-            SubView::new(builder, "scrolled_window_duplicate_finder", NotebookMainEnum::Duplicate, Some("image_preview_duplicates"), "tree_view_duplicate_finder"),
-            SubView::new(builder, "scrolled_window_empty_folder_finder", NotebookMainEnum::EmptyDirectories, None, "tree_view_empty_folder_finder"),
-            SubView::new(builder, "scrolled_window_empty_files_finder", NotebookMainEnum::EmptyFiles, None, "tree_view_empty_files_finder"),
-            SubView::new(builder, "scrolled_window_temporary_files_finder", NotebookMainEnum::Temporary, None, "tree_view_temporary_files_finder"),
-            SubView::new(builder, "scrolled_window_big_files_finder", NotebookMainEnum::BigFiles, None, "tree_view_big_files_finder"),
-            SubView::new(builder, "scrolled_window_similar_images_finder", NotebookMainEnum::SimilarImages, Some("image_preview_similar_images"), "tree_view_similar_images_finder"),
-            SubView::new(builder, "scrolled_window_similar_videos_finder", NotebookMainEnum::SimilarVideos, None, "tree_view_similar_videos_finder"),
-            SubView::new(builder, "scrolled_window_same_music_finder", NotebookMainEnum::SameMusic, None, "tree_view_same_music_finder"),
-            SubView::new(builder, "scrolled_window_invalid_symlinks", NotebookMainEnum::Symlinks, None, "tree_view_invalid_symlinks"),
-            SubView::new(builder, "scrolled_window_broken_files", NotebookMainEnum::BrokenFiles, None, "tree_view_broken_files"),
-            SubView::new(builder, "scrolled_window_bad_extensions", NotebookMainEnum::BadExtensions, None, "tree_view_bad_extensions")
+            SubView::new(builder, "scrolled_window_duplicate_finder", NotebookMainEnum::Duplicate, Some("image_preview_duplicates"), "tree_view_duplicate_finder", Some(settings.check_button_settings_show_preview_duplicates.clone())),
+            SubView::new(builder, "scrolled_window_empty_folder_finder", NotebookMainEnum::EmptyDirectories, None, "tree_view_empty_folder_finder", None),
+            SubView::new(builder, "scrolled_window_empty_files_finder", NotebookMainEnum::EmptyFiles, None, "tree_view_empty_files_finder", None),
+            SubView::new(builder, "scrolled_window_temporary_files_finder", NotebookMainEnum::Temporary, None, "tree_view_temporary_files_finder", None),
+            SubView::new(builder, "scrolled_window_big_files_finder", NotebookMainEnum::BigFiles, None, "tree_view_big_files_finder", None),
+            SubView::new(builder, "scrolled_window_similar_images_finder", NotebookMainEnum::SimilarImages, Some("image_preview_similar_images"), "tree_view_similar_images_finder", Some(settings.check_button_settings_show_preview_similar_images.clone())),
+            SubView::new(builder, "scrolled_window_similar_videos_finder", NotebookMainEnum::SimilarVideos, None, "tree_view_similar_videos_finder", None),
+            SubView::new(builder, "scrolled_window_same_music_finder", NotebookMainEnum::SameMusic, None, "tree_view_same_music_finder", None),
+            SubView::new(builder, "scrolled_window_invalid_symlinks", NotebookMainEnum::Symlinks, None, "tree_view_invalid_symlinks", None),
+            SubView::new(builder, "scrolled_window_broken_files", NotebookMainEnum::BrokenFiles, None, "tree_view_broken_files", None),
+            SubView::new(builder, "scrolled_window_bad_extensions", NotebookMainEnum::BadExtensions, None, "tree_view_bad_extensions", None),
         ]
         .into_iter()
         .collect();
@@ -262,7 +184,21 @@ impl GuiMainNotebook {
         let common_tree_views = CommonTreeViews {
             notebook_main: notebook_main.clone(),
             subviews,
+            preview_path: Rc::new(RefCell::new(String::new())),
         };
+
+        // TODO - This can be removed when common_tree_views will take all tree views
+        let tree_view_duplicate_finder: TreeView = common_tree_views.get_subview(NotebookMainEnum::Duplicate).tree_view.clone();
+        let tree_view_empty_folder_finder: TreeView = common_tree_views.get_subview(NotebookMainEnum::EmptyDirectories).tree_view.clone();
+        let tree_view_empty_files_finder: TreeView = common_tree_views.get_subview(NotebookMainEnum::EmptyFiles).tree_view.clone();
+        let tree_view_temporary_files_finder: TreeView = common_tree_views.get_subview(NotebookMainEnum::Temporary).tree_view.clone();
+        let tree_view_big_files_finder: TreeView = common_tree_views.get_subview(NotebookMainEnum::BigFiles).tree_view.clone();
+        let tree_view_similar_images_finder: TreeView = common_tree_views.get_subview(NotebookMainEnum::SimilarImages).tree_view.clone();
+        let tree_view_similar_videos_finder: TreeView = common_tree_views.get_subview(NotebookMainEnum::SimilarVideos).tree_view.clone();
+        let tree_view_same_music_finder: TreeView = common_tree_views.get_subview(NotebookMainEnum::SameMusic).tree_view.clone();
+        let tree_view_invalid_symlinks: TreeView = common_tree_views.get_subview(NotebookMainEnum::Symlinks).tree_view.clone();
+        let tree_view_broken_files: TreeView = common_tree_views.get_subview(NotebookMainEnum::BrokenFiles).tree_view.clone();
+        let tree_view_bad_extensions: TreeView = common_tree_views.get_subview(NotebookMainEnum::BadExtensions).tree_view.clone();
 
         Self {
             notebook_main,
@@ -277,28 +213,6 @@ impl GuiMainNotebook {
             tree_view_invalid_symlinks,
             tree_view_broken_files,
             tree_view_bad_extensions,
-            evk_tree_view_duplicate_finder,
-            evk_tree_view_empty_folder_finder,
-            evk_tree_view_empty_files_finder,
-            evk_tree_view_temporary_files_finder,
-            evk_tree_view_big_files_finder,
-            evk_tree_view_similar_images_finder,
-            evk_tree_view_similar_videos_finder,
-            evk_tree_view_same_music_finder,
-            evk_tree_view_invalid_symlinks,
-            evk_tree_view_broken_files,
-            evk_tree_view_bad_extensions,
-            gc_tree_view_duplicate_finder,
-            gc_tree_view_empty_folder_finder,
-            gc_tree_view_empty_files_finder,
-            gc_tree_view_temporary_files_finder,
-            gc_tree_view_big_files_finder,
-            gc_tree_view_similar_images_finder,
-            gc_tree_view_similar_videos_finder,
-            gc_tree_view_same_music_finder,
-            gc_tree_view_invalid_symlinks,
-            gc_tree_view_broken_files,
-            gc_tree_view_bad_extensions,
             combo_box_duplicate_check_method,
             combo_box_duplicate_hash_type,
             label_duplicate_check_method,
@@ -346,6 +260,10 @@ impl GuiMainNotebook {
             scale_similarity_same_music,
             common_tree_views,
         }
+    }
+
+    pub(crate) fn setup(&self, gui_data: &GuiData) {
+        self.common_tree_views.setup(gui_data);
     }
 
     pub(crate) fn get_main_tree_views(&self) -> [TreeView; NUMBER_OF_NOTEBOOK_MAIN_TABS] {
@@ -563,6 +481,7 @@ impl GuiMainNotebook {
                 if column_index == 0 {
                     continue; // Selection button
                 }
+                dbg!(&column.title());
                 column.set_title(&names_of_columns[notebook_index][column_index - 1]);
             }
         }

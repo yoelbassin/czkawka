@@ -23,7 +23,7 @@ pub(crate) fn connect_button_move(gui_data: &GuiData) {
     let entry_info = gui_data.entry_info.clone();
     let text_view_errors = gui_data.text_view_errors.clone();
 
-    let preview_path = gui_data.preview_path.clone();
+    let preview_path = gui_data.main_notebook.common_tree_views.preview_path.clone();
     let file_dialog_move_to_folder = gui_data.file_dialog_move_to_folder.clone();
 
     file_dialog_move_to_folder.connect_response(move |file_chooser, response_type| {

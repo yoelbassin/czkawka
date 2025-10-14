@@ -6,7 +6,7 @@ use std::env;
 
 use connect_things::connect_about_buttons::connect_about_buttons;
 use connect_things::connect_button_compare::connect_button_compare;
-use connect_things::connect_button_delete::{connect_button_delete, delete_things};
+use connect_things::connect_button_delete::connect_button_delete;
 use connect_things::connect_button_hardlink::connect_button_hardlink_symlink;
 use connect_things::connect_button_move::connect_button_move;
 use connect_things::connect_button_save::connect_button_save;
@@ -67,6 +67,7 @@ mod taskbar_progress;
 mod taskbar_progress_dummy;
 #[cfg(target_os = "windows")]
 mod taskbar_progress_win;
+mod dicom_traits;
 
 fn main() {
     let (infos, warnings) = set_config_cache_path("Czkawka", "Czkawka");
@@ -89,6 +90,7 @@ fn main() {
 
 fn build_ui(application: &Application, cli_args: Option<&CliResult>) {
     let gui_data: GuiData = GuiData::new_with_application(application);
+    gui_data.setup();
 
     let (result_sender, result_receiver) = unbounded();
 
