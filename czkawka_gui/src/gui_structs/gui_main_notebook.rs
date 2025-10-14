@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-
+use std::collections::HashMap;
 use czkawka_core::common::model::CheckingMethod;
 use czkawka_core::localizer_core::{fnc_get_similarity_minimal, fnc_get_similarity_very_high};
 use czkawka_core::tools::big_file::SearchMode;
@@ -269,7 +269,6 @@ impl GuiMainNotebook {
     pub(crate) fn get_main_tree_views(&self) -> [TreeView; NUMBER_OF_NOTEBOOK_MAIN_TABS] {
         [
             self.tree_view_duplicate_finder.clone(),
-            // TreeView::new(),
             self.tree_view_empty_folder_finder.clone(),
             self.tree_view_big_files_finder.clone(),
             self.tree_view_empty_files_finder.clone(),
@@ -400,89 +399,95 @@ impl GuiMainNotebook {
         }
 
         // Change names of columns
-        let names_of_columns = [
-            vec![
-                flg!("main_tree_view_column_size"),
-                flg!("main_tree_view_column_file_name"),
-                flg!("main_tree_view_column_path"),
-                flg!("main_tree_view_column_modification"),
-            ], // Duplicates
-            vec![
-                flg!("main_tree_view_column_folder_name"),
-                flg!("main_tree_view_column_path"),
-                flg!("main_tree_view_column_modification"),
-            ], // Empty Folders
-            vec![
-                flg!("main_tree_view_column_size"),
-                flg!("main_tree_view_column_file_name"),
-                flg!("main_tree_view_column_path"),
-                flg!("main_tree_view_column_modification"),
-            ], // Big files
-            vec![
-                flg!("main_tree_view_column_file_name"),
-                flg!("main_tree_view_column_path"),
-                flg!("main_tree_view_column_modification"),
-            ], // Empty files
-            vec![
-                flg!("main_tree_view_column_file_name"),
-                flg!("main_tree_view_column_path"),
-                flg!("main_tree_view_column_modification"),
-            ], // Temporary Files
-            vec![
-                flg!("main_tree_view_column_similarity"),
-                flg!("main_tree_view_column_size"),
-                flg!("main_tree_view_column_dimensions"),
-                flg!("main_tree_view_column_file_name"),
-                flg!("main_tree_view_column_path"),
-                flg!("main_tree_view_column_modification"),
-            ], // Similar Images
-            vec![
-                flg!("main_tree_view_column_size"),
-                flg!("main_tree_view_column_file_name"),
-                flg!("main_tree_view_column_path"),
-                flg!("main_tree_view_column_modification"),
-            ], // Similar Videos
-            vec![
-                flg!("main_tree_view_column_size"),
-                flg!("main_tree_view_column_file_name"),
-                flg!("main_tree_view_column_title"),
-                flg!("main_tree_view_column_artist"),
-                flg!("main_tree_view_column_year"),
-                flg!("main_tree_view_column_bitrate"),
-                flg!("main_tree_view_column_length"),
-                flg!("main_tree_view_column_genre"),
-                flg!("main_tree_view_column_path"),
-                flg!("main_tree_view_column_modification"),
-            ], // Music Duplicates
-            vec![
-                flg!("main_tree_view_column_symlink_file_name"),
-                flg!("main_tree_view_column_symlink_folder"),
-                flg!("main_tree_view_column_destination_path"),
-                flg!("main_tree_view_column_type_of_error"),
-                flg!("main_tree_view_column_modification"),
-            ], // Invalid Symlinks
-            vec![
-                flg!("main_tree_view_column_file_name"),
-                flg!("main_tree_view_column_path"),
-                flg!("main_tree_view_column_type_of_error"),
-                flg!("main_tree_view_column_modification"),
-            ], // Broken Files
-            vec![
-                flg!("main_tree_view_column_file_name"),
-                flg!("main_tree_view_column_path"),
-                flg!("main_tree_view_column_current_extension"),
-                flg!("main_tree_view_column_proper_extensions"),
-                flg!("main_tree_view_column_modification"),
-            ], // Broken Files
-        ];
+        let mut names_of_columns: HashMap<NotebookMainEnum, Vec<String>> = HashMap::new();
 
-        for (notebook_index, tree_view) in self.get_main_tree_views().iter().enumerate() {
-            for (column_index, column) in tree_view.columns().iter().enumerate() {
+        names_of_columns.insert(NotebookMainEnum::Duplicate, vec![
+            flg!("main_tree_view_column_size"),
+            flg!("main_tree_view_column_file_name"),
+            flg!("main_tree_view_column_path"),
+            flg!("main_tree_view_column_modification"),
+        ]);
+        names_of_columns.insert(NotebookMainEnum::EmptyDirectories, vec![
+            flg!("main_tree_view_column_folder_name"),
+            flg!("main_tree_view_column_path"),
+            flg!("main_tree_view_column_modification"),
+        ]);
+        names_of_columns.insert(NotebookMainEnum::BigFiles, vec![
+            flg!("main_tree_view_column_size"),
+            flg!("main_tree_view_column_file_name"),
+            flg!("main_tree_view_column_path"),
+            flg!("main_tree_view_column_modification"),
+        ]);
+        names_of_columns.insert(NotebookMainEnum::EmptyFiles, vec![
+            flg!("main_tree_view_column_file_name"),
+            flg!("main_tree_view_column_path"),
+            flg!("main_tree_view_column_modification"),
+        ]);
+        names_of_columns.insert(NotebookMainEnum::Temporary, vec![
+            flg!("main_tree_view_column_file_name"),
+            flg!("main_tree_view_column_path"),
+            flg!("main_tree_view_column_modification"),
+        ]);
+        names_of_columns.insert(NotebookMainEnum::SimilarImages, vec![
+            flg!("main_tree_view_column_similarity"),
+            flg!("main_tree_view_column_size"),
+            flg!("main_tree_view_column_dimensions"),
+            flg!("main_tree_view_column_file_name"),
+            flg!("main_tree_view_column_path"),
+            flg!("main_tree_view_column_modification"),
+        ]);
+        names_of_columns.insert(NotebookMainEnum::SimilarVideos, vec![
+            flg!("main_tree_view_column_size"),
+            flg!("main_tree_view_column_file_name"),
+            flg!("main_tree_view_column_path"),
+            flg!("main_tree_view_column_modification"),
+        ]);
+        names_of_columns.insert(NotebookMainEnum::SameMusic, vec![
+            flg!("main_tree_view_column_size"),
+            flg!("main_tree_view_column_file_name"),
+            flg!("main_tree_view_column_title"),
+            flg!("main_tree_view_column_artist"),
+            flg!("main_tree_view_column_year"),
+            flg!("main_tree_view_column_bitrate"),
+            flg!("main_tree_view_column_length"),
+            flg!("main_tree_view_column_genre"),
+            flg!("main_tree_view_column_path"),
+            flg!("main_tree_view_column_modification"),
+        ]);
+        names_of_columns.insert(NotebookMainEnum::Symlinks, vec![
+            flg!("main_tree_view_column_symlink_file_name"),
+            flg!("main_tree_view_column_symlink_folder"),
+            flg!("main_tree_view_column_destination_path"),
+            flg!("main_tree_view_column_type_of_error"),
+            flg!("main_tree_view_column_modification"),
+        ]);
+        names_of_columns.insert(NotebookMainEnum::BrokenFiles, vec![
+            flg!("main_tree_view_column_file_name"),
+            flg!("main_tree_view_column_path"),
+            flg!("main_tree_view_column_type_of_error"),
+            flg!("main_tree_view_column_modification"),
+        ]);
+        names_of_columns.insert(NotebookMainEnum::BadExtensions, vec![
+            flg!("main_tree_view_column_file_name"),
+            flg!("main_tree_view_column_path"),
+            flg!("main_tree_view_column_current_extension"),
+            flg!("main_tree_view_column_proper_extensions"),
+            flg!("main_tree_view_column_modification"),
+        ]);
+
+
+        for (key_enum, columns_names) in names_of_columns {
+            let s = &self.common_tree_views.get_subview(key_enum);
+            dbg!(&s.tree_view.widget_name());
+            dbg!(&columns_names);
+            assert_eq!(columns_names.len() + 1, s.tree_view.columns().len()); // +1 because of selection button
+            for (column_index, column) in s.tree_view.columns().iter().enumerate() {
                 if column_index == 0 {
                     continue; // Selection button
                 }
                 dbg!(&column.title());
-                column.set_title(&names_of_columns[notebook_index][column_index - 1]);
+                // column.set_title(&names_of_columns[notebook_index][column_index - 1]);
+                column.set_title(&columns_names[column_index - 1]);
             }
         }
 
